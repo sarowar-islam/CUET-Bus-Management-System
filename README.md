@@ -5,6 +5,7 @@ A modern, full-featured web application for managing bus transportation at Chitt
 ## ✨ Features
 
 ### For Students, Teachers & Staff
+
 - **📅 Real-time Schedule Viewing** - View bus schedules filtered by your role
 - **🗺️ Interactive Route Maps** - Explore routes with Mapbox integration
 - **🎨 Beautiful UI** - Modern, responsive design with light/dark mode
@@ -12,6 +13,7 @@ A modern, full-featured web application for managing bus transportation at Chitt
 - **🔔 Schedule Notifications** - Never miss your bus
 
 ### For Administrators
+
 - **🚍 Bus Management** - Add, edit, and manage the bus fleet
 - **🛣️ Route Management** - Create and modify routes with stops
 - **📋 Schedule Management** - Create schedules for different user categories
@@ -57,12 +59,12 @@ The application will be available at `http://localhost:5173`
 
 Test the application with these demo accounts:
 
-| Role     | Username  | Password    |
-|----------|-----------|-------------|
-| Student  | student1  | student123  |
-| Teacher  | teacher1  | teacher123  |
-| Staff    | staff1    | staff123    |
-| Admin    | admin     | admin123    |
+| Role    | Username | Password   |
+| ------- | -------- | ---------- |
+| Student | student1 | student123 |
+| Teacher | teacher1 | teacher123 |
+| Staff   | staff1   | staff123   |
+| Admin   | admin    | admin123   |
 
 ## 📱 Key Pages
 
