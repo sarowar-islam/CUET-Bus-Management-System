@@ -5,7 +5,6 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Bus, Clock, MapPin, Phone, User, AlertCircle } from 'lucide-react';
 import { schedules, buses, routes, drivers } from '@/data/dummyData';
@@ -16,10 +15,7 @@ const BusDetails = () => {
   const navigate = useNavigate();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState(() => 
-    localStorage.getItem('mapbox_token') || ''
-  );
-  const [tokenInput, setTokenInput] = useState(mapboxToken);
+  const mapboxToken = 'pk.eyJ1Ijoic2Fyb3dhcmlzbGFtIiwiYSI6ImNtazJsMnV6bDA5cGQzZHM4c2lza3Rta3kifQ.qoRQGOz5UK3XTG5BaCXd2Q';
   const [mapError, setMapError] = useState(false);
 
   const schedule = schedules.find(s => s.id === scheduleId);
@@ -42,12 +38,6 @@ const BusDetails = () => {
       case 'staff': return 'bg-staff/10 text-staff border-staff/20';
       default: return 'bg-muted text-muted-foreground';
     }
-  };
-
-  const handleSaveToken = () => {
-    localStorage.setItem('mapbox_token', tokenInput);
-    setMapboxToken(tokenInput);
-    setMapError(false);
   };
 
   useEffect(() => {
@@ -303,40 +293,13 @@ const BusDetails = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="h-[calc(100%-5rem)]">
-                {!mapboxToken ? (
-                  <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-                    <MapPin className="w-12 h-12 text-muted-foreground mb-4" />
-                    <h3 className="font-semibold text-foreground mb-2">Mapbox Token Required</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Enter your Mapbox public token to view the interactive map.
-                      Get one free at <a href="https://mapbox.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">mapbox.com</a>
-                    </p>
-                    <div className="flex gap-2 w-full max-w-sm">
-                      <Input
-                        type="text"
-                        placeholder="pk.eyJ1..."
-                        value={tokenInput}
-                        onChange={(e) => setTokenInput(e.target.value)}
-                      />
-                      <Button onClick={handleSaveToken}>Save</Button>
-                    </div>
-                  </div>
-                ) : mapError ? (
+                {mapError ? (
                   <div className="h-full flex flex-col items-center justify-center p-6 text-center">
                     <AlertCircle className="w-12 h-12 text-destructive mb-4" />
                     <h3 className="font-semibold text-foreground mb-2">Map Error</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Invalid Mapbox token. Please check and try again.
+                    <p className="text-sm text-muted-foreground">
+                      Unable to load the map. Please try again later.
                     </p>
-                    <div className="flex gap-2 w-full max-w-sm">
-                      <Input
-                        type="text"
-                        placeholder="pk.eyJ1..."
-                        value={tokenInput}
-                        onChange={(e) => setTokenInput(e.target.value)}
-                      />
-                      <Button onClick={handleSaveToken}>Update</Button>
-                    </div>
                   </div>
                 ) : (
                   <div ref={mapContainer} className="w-full h-full rounded-lg overflow-hidden" />

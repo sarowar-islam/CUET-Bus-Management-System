@@ -20,7 +20,7 @@ const StatCard: React.FC<StatCardProps> = ({
   className,
 }) => {
   return (
-    <Card className={cn("border-0 shadow-soft hover:shadow-card transition-shadow", className)}>
+    <Card className={cn("border-0 shadow-soft hover:shadow-card transition-all hover:-translate-y-1", className)}>
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className="space-y-2">
@@ -30,7 +30,7 @@ const StatCard: React.FC<StatCardProps> = ({
               <p className="text-xs text-muted-foreground">{description}</p>
             )}
           </div>
-          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary transition-colors hover:bg-primary hover:text-primary-foreground">
             {icon}
           </div>
         </div>

@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { 
   Bus, 
-  LayoutDashboard, 
   Route, 
   Users, 
   Calendar, 
@@ -43,7 +42,6 @@ const Navbar: React.FC = () => {
   };
 
   const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     ...(isAdmin ? [
       { path: '/admin/buses', label: 'Buses', icon: Bus },
       { path: '/admin/routes', label: 'Routes', icon: Route },

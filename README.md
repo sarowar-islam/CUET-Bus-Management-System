@@ -1,73 +1,116 @@
-# Welcome to your Lovable project
+# 🚌 CUET Bus Management System
 
-## Project info
+A modern, full-featured web application for managing bus transportation at Chittagong University of Engineering & Technology (CUET). Built with React, TypeScript, and Tailwind CSS.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## ✨ Features
 
-## How can I edit this code?
+### For Students, Teachers & Staff
+- **📅 Real-time Schedule Viewing** - View bus schedules filtered by your role
+- **🗺️ Interactive Route Maps** - Explore routes with Mapbox integration
+- **🎨 Beautiful UI** - Modern, responsive design with light/dark mode
+- **📱 Mobile-Friendly** - Works seamlessly on all devices
+- **🔔 Schedule Notifications** - Never miss your bus
 
-There are several ways of editing your application.
+### For Administrators
+- **🚍 Bus Management** - Add, edit, and manage the bus fleet
+- **🛣️ Route Management** - Create and modify routes with stops
+- **📋 Schedule Management** - Create schedules for different user categories
+- **👥 Driver Management** - Manage driver information
 
-**Use Lovable**
+## 🛠️ Technologies
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- **Frontend Framework**: React 18 with TypeScript
+- **Styling**: Tailwind CSS with custom design system
+- **UI Components**: shadcn/ui
+- **Maps**: Mapbox GL JS
+- **Routing**: React Router v6
+- **State Management**: React Context API
+- **Build Tool**: Vite
+- **Icons**: Lucide React
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🚀 Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js (v16 or higher)
+- npm or yarn
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### Installation
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to project directory
+cd CUET-Bus-Management-System
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🔑 Demo Credentials
 
-**Use GitHub Codespaces**
+Test the application with these demo accounts:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+| Role     | Username  | Password    |
+|----------|-----------|-------------|
+| Student  | student1  | student123  |
+| Teacher  | teacher1  | teacher123  |
+| Staff    | staff1    | staff123    |
+| Admin    | admin     | admin123    |
 
-## What technologies are used for this project?
+## 📱 Key Pages
 
-This project is built with:
+- **Landing Page** - Public-facing homepage with features overview
+- **Sign In/Sign Up** - Authentication pages
+- **Dashboard** - Main hub showing schedules based on user role
+- **Bus Details** - Detailed view with interactive map
+- **Settings** - User preferences and theme toggle
+- **Admin Panel** - Manage buses, routes, schedules, and drivers (Admin only)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🎨 Design System
 
-## How can I deploy this project?
+The application features a comprehensive design system with:
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+- **Custom Color Palette** - Distinct colors for student, teacher, staff, and admin roles
+- **Responsive Grid** - Mobile-first responsive layouts
+- **Custom Animations** - Smooth transitions and hover effects
+- **Dark Mode** - Full dark mode support
+- **Accessibility** - WCAG compliant with keyboard navigation
 
-## Can I connect a custom domain to my Lovable project?
+## 📦 Project Structure
 
-Yes, you can!
+```
+src/
+├── components/        # Reusable components
+│   ├── dashboard/    # Dashboard-specific components
+│   ├── layout/       # Layout components (Navbar, DashboardLayout)
+│   └── ui/          # shadcn/ui components
+├── contexts/         # React Context providers
+├── data/            # Mock data and types
+├── hooks/           # Custom React hooks
+├── pages/           # Page components
+│   └── admin/       # Admin-only pages
+└── lib/             # Utility functions
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🔐 Authentication
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+The application uses localStorage for demo authentication. In production, integrate with a proper backend authentication service.
+
+## 🗺️ Mapbox Integration
+
+The app uses Mapbox for interactive route visualization. A public API key is pre-configured for demo purposes.
+
+## 📄 License
+
+This project is created for educational purposes as part of CUET's transportation management system.
+
+## 👥 Contributors
+
+Built with ❤️ for the CUET community

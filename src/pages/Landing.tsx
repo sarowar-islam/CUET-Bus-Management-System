@@ -121,9 +121,9 @@ const Landing = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
-              <Card key={index} className="border-0 shadow-soft hover:shadow-card transition-shadow">
+              <Card key={index} className="border-0 shadow-soft hover:shadow-card transition-all hover:-translate-y-1">
                 <CardContent className="p-6 text-center">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4 text-primary">
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4 text-primary transition-colors hover:bg-primary hover:text-primary-foreground">
                     {feature.icon}
                   </div>
                   <h3 className="font-semibold text-lg text-foreground mb-2">{feature.title}</h3>
@@ -149,10 +149,10 @@ const Landing = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {categories.map((category, index) => (
-              <Card key={index} className="border-0 shadow-soft overflow-hidden group hover:shadow-card transition-shadow">
+              <Card key={index} className="border-0 shadow-soft overflow-hidden group hover:shadow-card transition-all hover:-translate-y-1">
                 <div className={`h-2 ${category.color}`} />
                 <CardContent className="p-6 text-center">
-                  <div className={`w-16 h-16 rounded-2xl ${category.color}/10 flex items-center justify-center mx-auto mb-4`}>
+                  <div className={`w-16 h-16 rounded-2xl ${category.color}/10 flex items-center justify-center mx-auto mb-4 transition-transform group-hover:scale-110`}>
                     <Users className={`w-8 h-8 ${category.color.replace('bg-', 'text-')}`} />
                   </div>
                   <h3 className="font-semibold text-xl text-foreground mb-2">{category.name}</h3>
