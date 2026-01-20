@@ -13,10 +13,14 @@ import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 import BusDetails from "./pages/BusDetails";
 import Settings from "./pages/Settings";
+import AmbulanceServices from "./pages/AmbulanceServices";
+import RequestBus from "./pages/RequestBus";
 import AdminBuses from "./pages/admin/AdminBuses";
 import AdminRoutes from "./pages/admin/AdminRoutes";
 import AdminSchedules from "./pages/admin/AdminSchedules";
 import AdminDrivers from "./pages/admin/AdminDrivers";
+import AdminAmbulances from "./pages/admin/AdminAmbulances";
+import AdminBusRequests from "./pages/admin/AdminBusRequests";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +52,16 @@ const App = () => (
                   <Settings />
                 </ProtectedRoute>
               } />
+              <Route path="/ambulance" element={
+                <ProtectedRoute>
+                  <AmbulanceServices />
+                </ProtectedRoute>
+              } />
+              <Route path="/request-bus" element={
+                <ProtectedRoute allowedRoles={['teacher', 'staff']}>
+                  <RequestBus />
+                </ProtectedRoute>
+              } />
               <Route path="/admin/buses" element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminBuses />
@@ -66,6 +80,16 @@ const App = () => (
               <Route path="/admin/drivers" element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminDrivers />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/ambulances" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminAmbulances />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/bus-requests" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminBusRequests />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />

@@ -51,3 +51,59 @@ export interface ScheduleWithDetails extends Schedule {
   route: Route;
   driver: Driver;
 }
+
+// Live Location Types
+export interface LiveLocation {
+  latitude: number;
+  longitude: number;
+  timestamp: Date;
+  heading?: number;
+  speed?: number;
+}
+
+// Ambulance Types
+export interface Ambulance {
+  id: string;
+  vehicleNumber: string;
+  driverName: string;
+  driverPhone: string;
+  status: 'available' | 'on_duty' | 'maintenance';
+  currentLocation?: LiveLocation;
+}
+
+export interface AmbulanceRequest {
+  id: string;
+  requesterId: string;
+  requesterName: string;
+  requesterPhone: string;
+  requesterRole: UserRole;
+  pickupLocation: string;
+  pickupCoordinates?: [number, number];
+  emergencyType: 'medical' | 'accident' | 'other';
+  description: string;
+  status: 'pending' | 'assigned' | 'en_route' | 'arrived' | 'completed' | 'cancelled';
+  ambulanceId?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Bus Request Types (for teachers/staff)
+export interface BusRequest {
+  id: string;
+  requesterId: string;
+  requesterName: string;
+  requesterRole: 'teacher' | 'staff';
+  purpose: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  pickupLocation: string;
+  destination: string;
+  expectedPassengers: number;
+  status: 'pending' | 'approved' | 'rejected' | 'completed';
+  assignedBusId?: string;
+  assignedDriverId?: string;
+  adminNotes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

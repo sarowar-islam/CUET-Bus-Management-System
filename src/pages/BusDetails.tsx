@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import UserLayout from '@/components/layout/UserLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -138,7 +138,7 @@ const BusDetails = () => {
 
   if (!schedule || !bus || !route || !driver) {
     return (
-      <DashboardLayout>
+      <UserLayout>
         <div className="flex flex-col items-center justify-center py-20">
           <AlertCircle className="w-12 h-12 text-destructive mb-4" />
           <h2 className="text-xl font-bold text-foreground mb-2">Schedule Not Found</h2>
@@ -148,12 +148,12 @@ const BusDetails = () => {
             Back to Dashboard
           </Button>
         </div>
-      </DashboardLayout>
+      </UserLayout>
     );
   }
 
   return (
-    <DashboardLayout>
+    <UserLayout>
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex items-center gap-4">
@@ -309,7 +309,7 @@ const BusDetails = () => {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </UserLayout>
   );
 };
 

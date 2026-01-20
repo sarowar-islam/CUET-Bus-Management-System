@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import UserLayout from '@/components/layout/UserLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -70,7 +70,7 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
+    <UserLayout>
       <div className="max-w-2xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Settings</h1>
@@ -200,7 +200,7 @@ const Settings: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </UserLayout>
   );
 };
 

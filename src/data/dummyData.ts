@@ -1,4 +1,4 @@
-import { User, Route, Stop, Driver, Bus, Schedule } from './types';
+import { User, Route, Stop, Driver, Bus, Schedule, Ambulance, AmbulanceRequest, BusRequest } from './types';
 
 // Dummy Users
 export const users: User[] = [
@@ -152,3 +152,87 @@ export const groupSchedulesByTime = (scheduleList: Schedule[]) => {
   });
   return grouped;
 };
+
+// Ambulances
+export const ambulances: Ambulance[] = [
+  { 
+    id: 'amb1', 
+    vehicleNumber: 'চট্ট-এম-০১-০০০১', 
+    driverName: 'Rashid Khan', 
+    driverPhone: '01700-111111', 
+    status: 'available',
+    currentLocation: { latitude: 22.4617, longitude: 91.9714, timestamp: new Date() }
+  },
+  { 
+    id: 'amb2', 
+    vehicleNumber: 'চট্ট-এম-০১-০০০২', 
+    driverName: 'Salam Mia', 
+    driverPhone: '01700-222222', 
+    status: 'available',
+    currentLocation: { latitude: 22.3702, longitude: 91.8334, timestamp: new Date() }
+  },
+  { 
+    id: 'amb3', 
+    vehicleNumber: 'চট্ট-এম-০১-০০০৩', 
+    driverName: 'Iqbal Hossain', 
+    driverPhone: '01700-333333', 
+    status: 'on_duty',
+    currentLocation: { latitude: 22.3530, longitude: 91.8200, timestamp: new Date() }
+  },
+];
+
+// Ambulance Requests (sample data)
+export const ambulanceRequests: AmbulanceRequest[] = [
+  {
+    id: 'areq1',
+    requesterId: '1',
+    requesterName: 'Rahim Ahmed',
+    requesterPhone: '01800-123456',
+    requesterRole: 'student',
+    pickupLocation: 'Shaheed Abdur Rab Hall',
+    emergencyType: 'medical',
+    description: 'High fever and difficulty breathing',
+    status: 'completed',
+    ambulanceId: 'amb1',
+    createdAt: new Date('2026-01-19T10:30:00'),
+    updatedAt: new Date('2026-01-19T11:00:00'),
+  },
+];
+
+// Bus Requests (for teachers/staff)
+export const busRequests: BusRequest[] = [
+  {
+    id: 'breq1',
+    requesterId: '2',
+    requesterName: 'Dr. Karim Rahman',
+    requesterRole: 'teacher',
+    purpose: 'Educational Tour to Cox\'s Bazar',
+    date: '2026-01-25',
+    startTime: '06:00',
+    endTime: '22:00',
+    pickupLocation: 'CUET Main Gate',
+    destination: 'Cox\'s Bazar',
+    expectedPassengers: 45,
+    status: 'approved',
+    assignedBusId: 'b1',
+    assignedDriverId: 'd1',
+    createdAt: new Date('2026-01-15T09:00:00'),
+    updatedAt: new Date('2026-01-16T14:00:00'),
+  },
+  {
+    id: 'breq2',
+    requesterId: '3',
+    requesterName: 'Abdul Hasan',
+    requesterRole: 'staff',
+    purpose: 'Staff Picnic',
+    date: '2026-01-28',
+    startTime: '08:00',
+    endTime: '18:00',
+    pickupLocation: 'CUET Admin Building',
+    destination: 'Foy\'s Lake',
+    expectedPassengers: 30,
+    status: 'pending',
+    createdAt: new Date('2026-01-18T11:00:00'),
+    updatedAt: new Date('2026-01-18T11:00:00'),
+  },
+];
