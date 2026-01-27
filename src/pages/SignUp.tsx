@@ -57,7 +57,7 @@ const SignUp = () => {
           <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mb-4 shadow-lg">
             <Bus className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">CUET Bus</h1>
+          <h1 className="text-2xl font-bold text-foreground">CUET Transport Section</h1>
           <p className="text-muted-foreground">Management System</p>
         </div>
 
