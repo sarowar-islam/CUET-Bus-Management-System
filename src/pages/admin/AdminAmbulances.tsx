@@ -1,6 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import React, { useState } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,16 +48,13 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  Navigation,
   AlertTriangle,
+  User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const AdminAmbulances = () => {
   const { toast } = useToast();
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const mapboxToken = 'pk.eyJ1Ijoic2Fyb3dhcmlzbGFtIiwiYSI6ImNtazJsMnV6bDA5cGQzZHM4c2lza3Rta3kifQ.qoRQGOz5UK3XTG2BaCXd2Q';
   
   const [ambulances, setAmbulances] = useState<Ambulance[]>(initialAmbulances);
   const [requests, setRequests] = useState<AmbulanceRequest[]>(initialRequests);
@@ -80,68 +75,7 @@ const AdminAmbulances = () => {
 
   const pendingRequests = requests.filter(r => r.status === 'pending' || r.status === 'assigned' || r.status === 'en_route');
   const completedRequests = requests.filter(r => r.status === 'completed' || r.status === 'cancelled');
-
-  useEffect(() => {
-    if (!mapContainer.current || !mapboxToken) return;
-
-    try {
-      mapboxgl.accessToken = mapboxToken;
-      
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: [91.9714, 22.4617],
-        zoom: 11,
-      });
-
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
-      ambulances.forEach((ambulance) => {
-        if (ambulance.currentLocation) {
-          const el = document.createElement('div');
-          el.className = 'ambulance-marker';
-          el.innerHTML = `
-            <div class="w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${
-              ambulance.status === 'available' 
-                ? 'bg-green-500' 
-                : ambulance.status === 'on_duty' 
-                  ? 'bg-yellow-500' 
-                  : 'bg-gray-500'
-            }">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10 10H6"/>
-                <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>
-                <path d="M19 18h2a1 1 0 0 0 1-1v-3.28a1 1 0 0 0-.684-.948l-1.923-.641a1 1 0 0 1-.578-.502l-1.539-3.076A1 1 0 0 0 16.382 8H14"/>
-                <path d="M8 8v4"/>
-                <circle cx="17" cy="18" r="2"/>
-                <circle cx="7" cy="18" r="2"/>
-              </svg>
-            </div>
-          `;
-
-          new mapboxgl.Marker(el)
-            .setLngLat([ambulance.currentLocation.longitude, ambulance.currentLocation.latitude])
-            .setPopup(
-              new mapboxgl.Popup({ offset: 25 })
-                .setHTML(`
-                  <div class="p-2">
-                    <p class="font-bold">${ambulance.vehicleNumber}</p>
-                    <p class="text-sm">Driver: ${ambulance.driverName}</p>
-                    <p class="text-sm">Status: ${ambulance.status}</p>
-                  </div>
-                `)
-            )
-            .addTo(map.current!);
-        }
-      });
-    } catch (error) {
-      console.error('Error initializing map:', error);
-    }
-
-    return () => {
-      map.current?.remove();
-    };
-  }, [ambulances]);
+  const availableAmbulances = ambulances.filter(a => a.status === 'available');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -314,22 +248,6 @@ const AdminAmbulances = () => {
             </DialogContent>
           </Dialog>
         </div>
-
-        {/* Live Map */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Navigation className="w-5 h-5 text-primary" />
-              Live Ambulance Tracking
-            </CardTitle>
-            <CardDescription>
-              Real-time locations of all ambulances
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] rounded-lg overflow-hidden border border-border" ref={mapContainer} />
-          </CardContent>
-        </Card>
 
         <Tabs defaultValue="ambulances" className="w-full">
           <TabsList className="grid w-full max-w-md grid-cols-3 mb-6">

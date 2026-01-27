@@ -70,24 +70,34 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border lg:hidden">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-b border-border lg:hidden">
         <div className="flex items-center justify-between h-16 px-4">
           <Link to="/dashboard" className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md">
               <Bus className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-bold text-lg text-foreground leading-tight">CUET Buses</h1>
+              <h1 className="font-bold text-lg text-foreground leading-tight">CUET Transport</h1>
               <p className="text-xs text-muted-foreground leading-tight">Admin Panel</p>
             </div>
           </Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="rounded-full"
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -116,27 +126,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   </Link>
                 );
               })}
-              <div className="border-t border-border my-4" />
-              <Link
-                to="/settings"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg transition-all",
-                  location.pathname === '/settings'
-                    ? "bg-primary text-primary-foreground shadow-md" 
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                <Settings className="w-5 h-5" />
-                <span className="font-medium">Settings</span>
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg w-full text-left text-destructive hover:bg-destructive/10 transition-all"
-              >
-                <LogOut className="w-5 h-5" />
-                <span className="font-medium">Sign Out</span>
-              </button>
             </nav>
           </div>
         </div>
@@ -155,7 +144,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             </div>
             {!isSidebarCollapsed && (
               <div>
-                <h1 className="font-bold text-lg text-foreground leading-tight">CUET Buses</h1>
+                <h1 className="font-bold text-lg text-foreground leading-tight">CUET Transport</h1>
                 <p className="text-xs text-muted-foreground leading-tight">Admin Panel</p>
               </div>
             )}
@@ -187,33 +176,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         </nav>
 
         {/* Bottom Section */}
-        <div className="p-4 border-t border-border space-y-2">
-          <Link
-            to="/settings"
-            title={isSidebarCollapsed ? "Settings" : undefined}
-            className={cn(
-              "flex items-center gap-3 px-4 py-3 rounded-lg transition-all",
-              isSidebarCollapsed && "justify-center px-3",
-              location.pathname === '/settings'
-                ? "bg-primary text-primary-foreground shadow-md" 
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
-          >
-            <Settings className="w-5 h-5 flex-shrink-0" />
-            {!isSidebarCollapsed && <span className="font-medium">Settings</span>}
-          </Link>
-          <button
-            onClick={handleLogout}
-            title={isSidebarCollapsed ? "Sign Out" : undefined}
-            className={cn(
-              "flex items-center gap-3 px-4 py-3 rounded-lg w-full text-left text-destructive hover:bg-destructive/10 transition-all",
-              isSidebarCollapsed && "justify-center px-3"
-            )}
-          >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
-            {!isSidebarCollapsed && <span className="font-medium">Sign Out</span>}
-          </button>
-
+        <div className="p-4 border-t border-border">
           {/* Collapse Toggle */}
           <Button
             variant="ghost"
@@ -240,7 +203,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         isSidebarCollapsed && "lg:ml-20"
       )}>
         {/* Desktop Top Bar */}
-        <header className="hidden lg:flex h-16 items-center justify-between px-6 border-b border-border bg-card">
+        <header className="hidden lg:flex fixed top-0 right-0 z-50 h-16 items-center justify-between px-6 border-b border-border bg-card/95 backdrop-blur-md transition-all duration-300" style={{ left: isSidebarCollapsed ? '5rem' : '16rem' }}>
           <div className="text-sm text-muted-foreground">
             Welcome back, <span className="text-foreground font-medium">{user?.fullName}</span>
           </div>
@@ -260,21 +223,21 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 px-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-primary font-semibold text-sm">
-                      {user?.fullName?.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-start">
+                <Button variant="ghost" className="flex items-center gap-2 px-3 hover:bg-primary/5">
+                  <div className="flex flex-col items-end mr-2">
                     <span className="text-sm font-medium text-foreground leading-tight">
-                      {user?.fullName?.split(' ')[0]}
+                      {user?.fullName}
                     </span>
                     <span className={cn(
                       "text-xs capitalize leading-tight",
                       getRoleBadgeColor(user?.role || '').replace('bg-', '').split(' ')[1]
                     )}>
                       {user?.role}
+                    </span>
+                  </div>
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center border-2 border-primary/30">
+                    <span className="text-primary font-semibold text-sm">
+                      {user?.fullName?.charAt(0).toUpperCase()}
                     </span>
                   </div>
                 </Button>
@@ -308,7 +271,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        <main className="pt-16 lg:pt-0">
+        <main className="pt-16 lg:pt-16">
           <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
             {children}
           </div>

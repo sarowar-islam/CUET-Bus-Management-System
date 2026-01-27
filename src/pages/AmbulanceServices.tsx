@@ -1,6 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import React, { useState } from 'react';
 import UserLayout from '@/components/layout/UserLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,22 +24,19 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { ambulances, ambulanceRequests as initialRequests } from '@/data/dummyData';
-import { AmbulanceRequest, Ambulance } from '@/data/types';
-import { Ambulance as AmbulanceIcon, Phone, MapPin, Clock, AlertTriangle, CheckCircle2, Navigation } from 'lucide-react';
+import { AmbulanceRequest } from '@/data/types';
+import { Ambulance as AmbulanceIcon, Phone, MapPin, Clock, AlertTriangle, CheckCircle2, User, PhoneCall, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 const AmbulanceServices = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const mapboxToken = 'pk.eyJ1Ijoic2Fyb3dhcmlzbGFtIiwiYSI6ImNtazJsMnV6bDA5cGQzZHM4c2lza3Rta3kifQ.qoRQGOz5UK3XTG2BaCXd2Q';
   
   const [requests, setRequests] = useState<AmbulanceRequest[]>(
     initialRequests.filter(r => r.requesterId === user?.id)
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedAmbulance, setSelectedAmbulance] = useState<Ambulance | null>(null);
   const [formData, setFormData] = useState({
     pickupLocation: '',
     emergencyType: 'medical' as 'medical' | 'accident' | 'other',
@@ -50,69 +45,6 @@ const AmbulanceServices = () => {
   });
 
   const availableAmbulances = ambulances.filter(a => a.status === 'available');
-
-  useEffect(() => {
-    if (!mapContainer.current || !mapboxToken) return;
-
-    try {
-      mapboxgl.accessToken = mapboxToken;
-      
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: [91.9714, 22.4617], // CUET coordinates
-        zoom: 12,
-      });
-
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
-      // Add ambulance markers
-      ambulances.forEach((ambulance) => {
-        if (ambulance.currentLocation) {
-          const el = document.createElement('div');
-          el.className = 'ambulance-marker';
-          el.innerHTML = `
-            <div class="w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${
-              ambulance.status === 'available' 
-                ? 'bg-green-500' 
-                : ambulance.status === 'on_duty' 
-                  ? 'bg-yellow-500' 
-                  : 'bg-gray-500'
-            }">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10 10H6"/>
-                <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>
-                <path d="M19 18h2a1 1 0 0 0 1-1v-3.28a1 1 0 0 0-.684-.948l-1.923-.641a1 1 0 0 1-.578-.502l-1.539-3.076A1 1 0 0 0 16.382 8H14"/>
-                <path d="M8 8v4"/>
-                <circle cx="17" cy="18" r="2"/>
-                <circle cx="7" cy="18" r="2"/>
-              </svg>
-            </div>
-          `;
-
-          new mapboxgl.Marker(el)
-            .setLngLat([ambulance.currentLocation.longitude, ambulance.currentLocation.latitude])
-            .setPopup(
-              new mapboxgl.Popup({ offset: 25 })
-                .setHTML(`
-                  <div class="p-2">
-                    <p class="font-bold">${ambulance.vehicleNumber}</p>
-                    <p class="text-sm">Driver: ${ambulance.driverName}</p>
-                    <p class="text-sm">Status: ${ambulance.status}</p>
-                  </div>
-                `)
-            )
-            .addTo(map.current!);
-        }
-      });
-    } catch (error) {
-      console.error('Error initializing map:', error);
-    }
-
-    return () => {
-      map.current?.remove();
-    };
-  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,115 +129,136 @@ const AmbulanceServices = () => {
   return (
     <UserLayout>
       <div className="space-y-6 animate-fade-in">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* Header with Back Button */}
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            asChild
+            className="rounded-full"
+          >
+            <Link to="/dashboard">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+          </Button>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
               <AmbulanceIcon className="w-8 h-8 text-red-500" />
               Ambulance Services
             </h1>
             <p className="text-muted-foreground mt-1">
-              Request emergency medical assistance anytime
+              24/7 Emergency medical assistance
             </p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2 bg-red-600 hover:bg-red-700">
-                <AlertTriangle className="w-4 h-4" />
-                Request Ambulance
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 text-red-600">
-                  <AlertTriangle className="w-5 h-5" />
-                  Emergency Ambulance Request
-                </DialogTitle>
-                <DialogDescription>
-                  Please provide details about the emergency. Help will be dispatched immediately.
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Contact Number *</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="01XXX-XXXXXX"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="pickupLocation">Pickup Location *</Label>
-                  <Input
-                    id="pickupLocation"
-                    placeholder="e.g., Shaheed Abdur Rab Hall, Room 301"
-                    value={formData.pickupLocation}
-                    onChange={(e) => setFormData({ ...formData, pickupLocation: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="emergencyType">Emergency Type *</Label>
-                  <Select
-                    value={formData.emergencyType}
-                    onValueChange={(value: 'medical' | 'accident' | 'other') => 
-                      setFormData({ ...formData, emergencyType: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select emergency type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="medical">Medical Emergency</SelectItem>
-                      <SelectItem value="accident">Accident</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Briefly describe the emergency..."
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-                <div className="flex justify-end gap-3 pt-2">
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" className="bg-red-600 hover:bg-red-700">
-                    Send Emergency Request
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
         </div>
 
-        {/* Quick Call Section */}
-        <Card className="border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-900/10">
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                  <Phone className="w-6 h-6 text-red-600" />
+        {/* Emergency Call Button - Prominent */}
+        <Card className="border-red-400 dark:border-red-800 bg-gradient-to-r from-red-600 to-red-500 text-white overflow-hidden shadow-xl shadow-red-500/20">
+          <CardContent className="p-6 md:p-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-4 text-center md:text-left">
+                <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                  <PhoneCall className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Emergency Hotline (24/7)</p>
-                  <p className="text-xl font-bold text-red-600">01700-CUET-99</p>
+                  <p className="text-red-100 text-sm font-medium">Emergency Hotline (24/7)</p>
+                  <p className="text-3xl md:text-4xl font-bold">01700-CUET-99</p>
+                  <p className="text-red-100 text-sm mt-1">Call for immediate assistance</p>
                 </div>
               </div>
-              <Button variant="outline" className="border-red-300 text-red-600 hover:bg-red-100" asChild>
-                <a href="tel:+8801700000099">
-                  <Phone className="w-4 h-4 mr-2" />
-                  Call Now
-                </a>
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <Button 
+                  size="lg"
+                  className="bg-white text-red-600 hover:bg-red-50 font-semibold shadow-lg flex-1 md:flex-none"
+                  asChild
+                >
+                  <a href="tel:+8801700000099">
+                    <Phone className="w-5 h-5 mr-2" />
+                    Call Now
+                  </a>
+                </Button>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      size="lg"
+                      className="bg-white/20 text-white border-2 border-white/60 hover:bg-white/30 font-semibold backdrop-blur-sm flex-1 md:flex-none"
+                    >
+                      <AlertTriangle className="w-5 h-5 mr-2" />
+                      Request Online
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2 text-red-600">
+                        <AlertTriangle className="w-5 h-5" />
+                        Emergency Ambulance Request
+                      </DialogTitle>
+                      <DialogDescription>
+                        Please provide details about the emergency. Help will be dispatched immediately.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Contact Number *</Label>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          placeholder="01XXX-XXXXXX"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="pickupLocation">Pickup Location *</Label>
+                        <Input
+                          id="pickupLocation"
+                          placeholder="e.g., Shaheed Abdur Rab Hall, Room 301"
+                          value={formData.pickupLocation}
+                          onChange={(e) => setFormData({ ...formData, pickupLocation: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="emergencyType">Emergency Type *</Label>
+                        <Select
+                          value={formData.emergencyType}
+                          onValueChange={(value: 'medical' | 'accident' | 'other') => 
+                            setFormData({ ...formData, emergencyType: value })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select emergency type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="medical">Medical Emergency</SelectItem>
+                            <SelectItem value="accident">Accident</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
+                          id="description"
+                          placeholder="Briefly describe the emergency..."
+                          value={formData.description}
+                          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                          rows={3}
+                        />
+                      </div>
+                      <div className="flex justify-end gap-3 pt-2">
+                        <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit" className="bg-red-600 hover:bg-red-700">
+                          Send Emergency Request
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -314,43 +267,79 @@ const AmbulanceServices = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Navigation className="w-5 h-5 text-green-500" />
-              Live Ambulance Locations
+              <AmbulanceIcon className="w-5 h-5 text-green-500" />
+              Available Ambulances
             </CardTitle>
             <CardDescription>
-              {availableAmbulances.length} ambulance(s) available for dispatch
+              {availableAmbulances.length} of {ambulances.length} ambulance(s) available for dispatch
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] rounded-lg overflow-hidden border border-border" ref={mapContainer} />
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {ambulances.map((ambulance) => (
                 <div
                   key={ambulance.id}
                   className={cn(
-                    "p-3 rounded-lg border transition-all cursor-pointer hover:shadow-md",
+                    "p-4 rounded-xl border-2 transition-all",
                     ambulance.status === 'available' 
-                      ? 'border-green-200 bg-green-50/50 dark:bg-green-900/10' 
-                      : 'border-border bg-muted/50'
+                      ? 'border-green-300 bg-gradient-to-br from-green-50 to-transparent dark:from-green-900/20 dark:border-green-800' 
+                      : ambulance.status === 'on_duty'
+                        ? 'border-yellow-300 bg-gradient-to-br from-yellow-50 to-transparent dark:from-yellow-900/20 dark:border-yellow-800'
+                        : 'border-border bg-muted/30'
                   )}
-                  onClick={() => setSelectedAmbulance(ambulance)}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <AmbulanceIcon className={cn(
-                        "w-5 h-5",
-                        ambulance.status === 'available' ? 'text-green-600' : 'text-muted-foreground'
-                      )} />
-                      <span className="font-medium text-sm">{ambulance.vehicleNumber}</span>
+                      <div className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center",
+                        ambulance.status === 'available' 
+                          ? 'bg-green-100 dark:bg-green-900/50' 
+                          : ambulance.status === 'on_duty'
+                            ? 'bg-yellow-100 dark:bg-yellow-900/50'
+                            : 'bg-muted'
+                      )}>
+                        <AmbulanceIcon className={cn(
+                          "w-5 h-5",
+                          ambulance.status === 'available' 
+                            ? 'text-green-600' 
+                            : ambulance.status === 'on_duty'
+                              ? 'text-yellow-600'
+                              : 'text-muted-foreground'
+                        )} />
+                      </div>
+                      <span className="font-semibold text-foreground">{ambulance.vehicleNumber}</span>
                     </div>
-                    <Badge variant={ambulance.status === 'available' ? 'default' : 'secondary'} className="text-xs">
+                    <Badge 
+                      variant={ambulance.status === 'available' ? 'default' : 'secondary'} 
+                      className={cn(
+                        "text-xs",
+                        ambulance.status === 'available' && 'bg-green-500 hover:bg-green-600',
+                        ambulance.status === 'on_duty' && 'bg-yellow-500 text-yellow-900 hover:bg-yellow-600'
+                      )}
+                    >
                       {ambulance.status === 'available' ? 'Available' : ambulance.status === 'on_duty' ? 'On Duty' : 'Maintenance'}
                     </Badge>
                   </div>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    <p>Driver: {ambulance.driverName}</p>
-                    <p>Phone: {ambulance.driverPhone}</p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <User className="w-4 h-4" />
+                      <span>{ambulance.driverName}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Phone className="w-4 h-4" />
+                      <span>{ambulance.driverPhone}</span>
+                    </div>
                   </div>
+                  {ambulance.status === 'available' && (
+                    <Button 
+                      size="sm" 
+                      className="w-full mt-3 bg-green-600 hover:bg-green-700"
+                      onClick={() => setIsDialogOpen(true)}
+                    >
+                      <Phone className="w-4 h-4 mr-2" />
+                      Request This Ambulance
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
@@ -370,10 +359,10 @@ const AmbulanceServices = () => {
           </CardHeader>
           <CardContent>
             {requests.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <CheckCircle2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No ambulance requests yet.</p>
-                <p className="text-sm">We hope you stay safe and healthy!</p>
+              <div className="text-center py-12 text-muted-foreground">
+                <CheckCircle2 className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                <p className="text-lg font-medium">No ambulance requests yet.</p>
+                <p className="text-sm mt-1">We hope you stay safe and healthy!</p>
               </div>
             ) : (
               <div className="space-y-4">
