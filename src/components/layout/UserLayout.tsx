@@ -57,7 +57,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
                 <Bus className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="font-bold text-lg text-foreground leading-tight">CUET Transport</h1>
+                <h1 className="font-bold text-lg text-foreground leading-tight">CUET Transport Section</h1>
                 <p className="text-xs text-muted-foreground leading-tight">Section</p>
               </div>
             </Link>

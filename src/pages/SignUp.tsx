@@ -65,7 +65,7 @@ const SignUp = () => {
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-2xl text-center">Create Account</CardTitle>
             <CardDescription className="text-center">
-              Register to access the bus management system
+              Register to access the transport section
             </CardDescription>
           </CardHeader>
           <CardContent>

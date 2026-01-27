@@ -72,7 +72,7 @@ const Landing = () => {
           </h1>
           
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            CUET Bus Management System provides seamless bus scheduling and tracking 
+            CUET Transport Section provides seamless bus scheduling and tracking 
             for students, teachers, and staff of Chittagong University of Engineering & Technology.
           </p>
 
@@ -192,7 +192,7 @@ const Landing = () => {
             <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
               <Bus className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-bold text-foreground">CUET Bus Management System</span>
+            <span className="font-bold text-foreground">CUET Transport Section</span>
           </div>
           <p className="text-sm text-muted-foreground">
             © 2024 Chittagong University of Engineering & Technology. All rights reserved.
