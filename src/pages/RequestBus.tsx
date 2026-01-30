@@ -30,7 +30,14 @@ const RequestBus = () => {
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
+    requesterName: user?.fullName || '',
+    requesterPosition: '',
+    requesterDepartment: '',
+    mobile: '',
     purpose: '',
+    reason: '',
+    transportType: 'bus',
+    duration: '',
     date: '',
     startTime: '',
     endTime: '',
@@ -45,9 +52,15 @@ const RequestBus = () => {
     const newRequest: BusRequest = {
       id: `breq${Date.now()}`,
       requesterId: user?.id || '',
-      requesterName: user?.fullName || '',
+      requesterName: formData.requesterName || user?.fullName || '',
+      requesterPhone: formData.mobile || '',
+      requesterPosition: formData.requesterPosition || '',
+      requesterDepartment: formData.requesterDepartment || '',
       requesterRole: user?.role as 'teacher' | 'staff',
       purpose: formData.purpose,
+      reason: formData.reason,
+      transportType: formData.transportType,
+      duration: formData.duration,
       date: formData.date,
       startTime: formData.startTime,
       endTime: formData.endTime,
@@ -62,7 +75,14 @@ const RequestBus = () => {
     setRequests([newRequest, ...requests]);
     setIsDialogOpen(false);
     setFormData({
+      requesterName: user?.fullName || '',
+      requesterPosition: '',
+      requesterDepartment: '',
+      mobile: '',
       purpose: '',
+      reason: '',
+      transportType: 'bus',
+      duration: '',
       date: '',
       startTime: '',
       endTime: '',
@@ -164,6 +184,51 @@ const RequestBus = () => {
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="requesterName">Requester Name *</Label>
+                    <Input
+                      id="requesterName"
+                      placeholder="Full name"
+                      value={formData.requesterName}
+                      onChange={(e) => setFormData({ ...formData, requesterName: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="mobile">Mobile Number *</Label>
+                    <Input
+                      id="mobile"
+                      type="tel"
+                      placeholder="e.g., 017XXXXXXXX"
+                      value={formData.mobile}
+                      onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="requesterPosition">Position / Title</Label>
+                    <Input
+                      id="requesterPosition"
+                      placeholder="e.g., Professor, Lab Engineer"
+                      value={formData.requesterPosition}
+                      onChange={(e) => setFormData({ ...formData, requesterPosition: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="requesterDepartment">Department</Label>
+                    <Input
+                      id="requesterDepartment"
+                      placeholder="e.g., CSE Department"
+                      value={formData.requesterDepartment}
+                      onChange={(e) => setFormData({ ...formData, requesterDepartment: e.target.value })}
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="purpose">Purpose / Event Name *</Label>
                   <Input
@@ -173,6 +238,43 @@ const RequestBus = () => {
                     onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reason">Reason for transport usage</Label>
+                  <Textarea
+                    id="reason"
+                    placeholder="Please describe why the transport is needed"
+                    value={formData.reason}
+                    onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="transportType">Transport Type *</Label>
+                    <select
+                      id="transportType"
+                      value={formData.transportType}
+                      onChange={(e) => setFormData({ ...formData, transportType: e.target.value as any })}
+                      className="w-full rounded-md border bg-transparent px-3 py-2"
+                    >
+                      <option value="bus">Bus</option>
+                      <option value="minibus">Minibus</option>
+                      <option value="car">Car</option>
+                      <option value="ambulance">Ambulance</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="duration">How long requested for</Label>
+                    <Input
+                      id="duration"
+                      placeholder="e.g., 8 hours, 2 days"
+                      value={formData.duration}
+                      onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                    />
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -311,11 +413,14 @@ const RequestBus = () => {
                       className="p-4 rounded-lg border border-border bg-card hover:shadow-md transition-all"
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                        <h3 className="font-semibold text-lg">{request.purpose}</h3>
+                        <div>
+                          <h3 className="font-semibold text-lg">{request.purpose}</h3>
+                          <div className="text-sm text-muted-foreground">Requested by: {request.requesterName}{request.requesterPhone ? ` • ${request.requesterPhone}` : ''}</div>
+                        </div>
                         {getStatusBadge(request.status)}
                       </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 text-sm">
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Calendar className="w-4 h-4" />
                           <span>{formatDate(request.date)}</span>
@@ -331,6 +436,14 @@ const RequestBus = () => {
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <MapPin className="w-4 h-4" />
                           <span className="truncate">{request.destination}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Bus className="w-4 h-4" />
+                          <span className="capitalize">{request.transportType || 'bus'}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <span className="text-xs">⏱</span>
+                          <span className="truncate">{request.duration || '—'}</span>
                         </div>
                       </div>
 

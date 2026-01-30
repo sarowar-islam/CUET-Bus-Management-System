@@ -93,7 +93,17 @@ export interface BusRequest {
   requesterId: string;
   requesterName: string;
   requesterRole: 'teacher' | 'staff';
+  // Optional contact & organizational details provided at request time
+  requesterPhone?: string;
+  requesterPosition?: string;
+  requesterDepartment?: string;
   purpose: string;
+  // Reason for transport usage (additional detail beyond `purpose`)
+  reason?: string;
+  // Requested vehicle type: bus / minibus / car / ambulance
+  transportType?: 'bus' | 'minibus' | 'car' | 'ambulance';
+  // How long the vehicle is required (e.g., "8 hours", "2 days")
+  duration?: string;
   date: string;
   startTime: string;
   endTime: string;
