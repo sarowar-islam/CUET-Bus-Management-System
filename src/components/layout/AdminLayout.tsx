@@ -73,8 +73,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <header className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-b border-border lg:hidden">
         <div className="flex items-center justify-between h-16 px-4">
           <Link to="/dashboard" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md">
-              <Bus className="w-5 h-5 text-primary-foreground" />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md">
+              <img src="/pictures/logo.png.png" alt="CUET Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <h1 className="font-bold text-lg text-foreground leading-tight">CUET Transport Section</h1>
@@ -177,8 +177,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-border">
           <Link to="/dashboard" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md flex-shrink-0">
-              <Bus className="w-5 h-5 text-primary-foreground" />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+              <img src="/pictures/logo.png.png" alt="CUET Logo" className="w-full h-full object-contain" />
             </div>
             {!isSidebarCollapsed && (
               <div>
