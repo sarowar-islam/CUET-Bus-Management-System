@@ -6,93 +6,105 @@
 
 @layer base {
   :root {
-    --background: 250 20% 98%;
-    --foreground: 260 47% 11%;
+    /* Light Theme - Fresh, Campus-friendly, Reliable */
+    --background: 207 40% 98%;
+    --foreground: 218 30% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 260 47% 11%;
+    --card-foreground: 218 30% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 260 47% 11%;
+    --popover-foreground: 218 30% 20%;
 
-    --primary: 262 83% 58%;
+    --primary: 199 61% 44%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 250 40% 96%;
-    --secondary-foreground: 260 47% 11%;
+    --secondary: 159 35% 56%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 250 40% 96%;
-    --muted-foreground: 255 16% 47%;
+    --muted: 210 13% 91%;
+    --muted-foreground: 217 15% 37%;
 
-    --accent: 230 80% 60%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 37 88% 63%;
+    --accent-foreground: 218 30% 20%;
+
+    --destructive: 9 100% 64%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 210 13% 91%;
+    --input: 210 13% 91%;
+    --ring: 199 61% 44%;
+
+    --radius: 0.75rem;
+
+    /* Transport-inspired accent colors */
+    --transport-active: 48 96% 53%;
+    --transport-available: 122 71% 60%;
+    --transport-warning: 24 100% 53%;
+
+    /* Custom colors for bus categories */
+    --student: 199 61% 44%;
+    --teacher: 159 35% 56%;
+    --staff: 37 88% 63%;
+    --admin: 24 100% 53%;
+
+    /* Gradient for hero sections */
+    --gradient-primary: linear-gradient(135deg, hsl(199 61% 44%) 0%, hsl(159 35% 56%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(37 88% 63%) 0%, hsl(199 61% 44%) 100%);
+
+    --sidebar-background: 207 40% 98%;
+    --sidebar-foreground: 218 30% 20%;
+    --sidebar-primary: 199 61% 44%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 159 35% 56%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 210 13% 91%;
+    --sidebar-ring: 199 61% 44%;
+  }
+
+  .dark {
+    /* Dark Theme - Modern & Chill */
+    --background: 220 56% 11%;
+    --foreground: 210 14% 90%;
+
+    --card: 217 39% 18%;
+    --card-foreground: 210 14% 90%;
+
+    --popover: 217 39% 18%;
+    --popover-foreground: 210 14% 90%;
+
+    --primary: 200 98% 56%;
+    --primary-foreground: 220 56% 11%;
+
+    --secondary: 122 71% 60%;
+    --secondary-foreground: 220 56% 11%;
+
+    --muted: 215 23% 32%;
+    --muted-foreground: 218 14% 59%;
+
+    --accent: 48 96% 53%;
+    --accent-foreground: 220 56% 11%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 254 32% 91%;
-    --input: 254 32% 91%;
-    --ring: 262 83% 58%;
+    --border: 215 23% 32%;
+    --input: 215 23% 32%;
+    --ring: 200 98% 56%;
 
-    --radius: 0.75rem;
+    /* Transport-inspired accent colors */
+    --transport-active: 48 96% 53%;
+    --transport-available: 122 71% 60%;
+    --transport-warning: 24 100% 53%;
 
-    /* Custom colors for bus categories */
-    --student: 262 83% 58%;
-    --teacher: 230 80% 60%;
-    --staff: 280 70% 55%;
-    --admin: 290 67% 50%;
-
-    /* Gradient for hero sections */
-    --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(230 80% 55%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(230 80% 60%) 0%, hsl(262 70% 50%) 100%);
-
-    --sidebar-background: 250 20% 98%;
-    --sidebar-foreground: 260 47% 26%;
-    --sidebar-primary: 262 83% 58%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 250 40% 96%;
-    --sidebar-accent-foreground: 260 47% 11%;
-    --sidebar-border: 254 32% 91%;
-    --sidebar-ring: 262 83% 58%;
-  }
-
-  .dark {
-    --background: 260 40% 6%;
-    --foreground: 250 40% 98%;
-
-    --card: 260 40% 10%;
-    --card-foreground: 250 40% 98%;
-
-    --popover: 260 40% 10%;
-    --popover-foreground: 250 40% 98%;
-
-    --primary: 262 83% 63%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 257 33% 17%;
-    --secondary-foreground: 250 40% 98%;
-
-    --muted: 257 33% 17%;
-    --muted-foreground: 255 20% 65%;
-
-    --accent: 230 80% 65%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 257 33% 20%;
-    --input: 257 33% 20%;
-    --ring: 262 83% 63%;
-
-    --sidebar-background: 260 40% 6%;
-    --sidebar-foreground: 250 40% 98%;
-    --sidebar-primary: 262 83% 63%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 257 33% 17%;
-    --sidebar-accent-foreground: 250 40% 98%;
-    --sidebar-border: 257 33% 20%;
-    --sidebar-ring: 262 83% 63%;
+    --sidebar-background: 220 56% 11%;
+    --sidebar-foreground: 210 14% 90%;
+    --sidebar-primary: 200 98% 56%;
+    --sidebar-primary-foreground: 220 56% 11%;
+    --sidebar-accent: 122 71% 60%;
+    --sidebar-accent-foreground: 220 56% 11%;
+    --sidebar-border: 215 23% 32%;
+    --sidebar-ring: 200 98% 56%;
   }
 }
 
