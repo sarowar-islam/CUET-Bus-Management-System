@@ -49,8 +49,8 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, showMenuButton = false }) 
     <header className="h-16 bg-card/95 backdrop-blur-md border-b border-border flex items-center justify-between px-4">
       {/* Left Side - Logo */}
       <Link to="/dashboard" className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md">
-          <Bus className="w-5 h-5 text-primary-foreground" />
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md">
+          <img src="/pictures/logo.png.png" alt="CUET Logo" className="w-full h-full object-contain" />
         </div>
         <div className="hidden sm:block">
           <h1 className="font-bold text-lg text-foreground leading-tight">CUET Transport Section</h1>

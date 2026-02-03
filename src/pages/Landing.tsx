@@ -41,8 +41,8 @@ const Landing = () => {
       <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-              <Bus className="w-5 h-5 text-primary-foreground" />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center">
+              <img src="/pictures/logo.png.png" alt="CUET Logo" className="w-full h-full object-contain" />
             </div>
             <span className="font-bold text-xl text-foreground">CUET Transport Section</span>
           </div>
