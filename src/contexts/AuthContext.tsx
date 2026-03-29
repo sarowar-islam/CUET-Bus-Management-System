@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserRole } from '@/data/types';
-import { users } from '@/data/dummyData';
+import { authService } from '@/services/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -46,61 +46,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    // Check default users
-    let foundUser = users.find(u => u.username === username && u.password === password);
-    
-    // Check registered users in localStorage
-    if (!foundUser) {
-      const registeredUsers = JSON.parse(localStorage.getItem('cuet_bus_registered_users') || '[]');
-      foundUser = registeredUsers.find((u: User) => u.username === username && u.password === password);
+    try {
+      const response = await authService.login({ username, password });
+      
+      if (response.success && response.data) {
+        const { user, token } = response.data;
+        setUser(user);
+        localStorage.setItem('cuet_bus_user', JSON.stringify(user));
+        localStorage.setItem('cuet_bus_token', token);
+        return { success: true };
+      }
+      
+      return { success: false, error: response.error || 'Login failed' };
+    } catch (error: any) {
+      return { success: false, error: 'An error occurred during login' };
     }
-
-    if (foundUser) {
-      setUser(foundUser);
-      localStorage.setItem('cuet_bus_user', JSON.stringify(foundUser));
-      return { success: true };
-    }
-    
-    return { success: false, error: 'Invalid username or password.' };
   };
 
   const signup = async (data: SignupData): Promise<{ success: boolean; error?: string }> => {
-    // Check if username exists
-    const existingUser = users.find(u => u.username === data.username);
-    const registeredUsers = JSON.parse(localStorage.getItem('cuet_bus_registered_users') || '[]');
-    const existingRegistered = registeredUsers.find((u: User) => u.username === data.username);
-
-    if (existingUser || existingRegistered) {
-      return { success: false, error: 'Username already exists.' };
+    try {
+      const response = await authService.signup({
+        fullName: data.fullName,
+        username: data.username,
+        email: data.email,
+        password: data.password,
+      });
+      
+      if (response.success) {
+        return { success: true };
+      }
+      
+      return { success: false, error: response.error || 'Signup failed' };
+    } catch (error: any) {
+      return { success: false, error: 'An error occurred during signup' };
     }
-
-    // Check if email exists
-    const existingEmail = users.find(u => u.email === data.email);
-    const existingRegisteredEmail = registeredUsers.find((u: User) => u.email === data.email);
-
-    if (existingEmail || existingRegisteredEmail) {
-      return { success: false, error: 'Email already registered.' };
-    }
-
-    // Create new user (default to student role)
-    const newUser: User = {
-      id: `user_${Date.now()}`,
-      username: data.username,
-      email: data.email,
-      fullName: data.fullName,
-      role: 'student' as UserRole,
-      password: data.password,
-    };
-
-    registeredUsers.push(newUser);
-    localStorage.setItem('cuet_bus_registered_users', JSON.stringify(registeredUsers));
-
-    return { success: true };
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('cuet_bus_user');
+    authService.logout();
   };
 
   return (
