@@ -49,8 +49,8 @@
     --admin: 24 100% 53%;
 
     /* Gradient for hero sections */
-    --gradient-primary: linear-gradient(135deg, hsl(199 61% 44%) 0%, hsl(159 35% 56%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(37 88% 63%) 0%, hsl(199 61% 44%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(217 100% 50%) 0%, hsl(128 100% 40%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(0 0% 97%) 0%, hsl(217 100% 50%) 100%);
 
     --sidebar-background: 207 40% 98%;
     --sidebar-foreground: 218 30% 20%;
@@ -63,48 +63,48 @@
   }
 
   .dark {
-    /* Dark Theme - Modern & Chill */
-    --background: 220 56% 11%;
-    --foreground: 210 14% 90%;
+    /* Dark Theme - Charcoal Black & Safety Blue */
+    --background: 0 0% 7%;
+    --foreground: 0 0% 97%;
 
-    --card: 217 39% 18%;
-    --card-foreground: 210 14% 90%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 97%;
 
-    --popover: 217 39% 18%;
-    --popover-foreground: 210 14% 90%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 97%;
 
-    --primary: 200 98% 56%;
-    --primary-foreground: 220 56% 11%;
+    --primary: 217 100% 50%;
+    --primary-foreground: 0 0% 7%;
 
-    --secondary: 122 71% 60%;
-    --secondary-foreground: 220 56% 11%;
+    --secondary: 128 100% 40%;
+    --secondary-foreground: 0 0% 97%;
 
-    --muted: 215 23% 32%;
-    --muted-foreground: 218 14% 59%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 69%;
 
-    --accent: 48 96% 53%;
-    --accent-foreground: 220 56% 11%;
+    --accent: 217 100% 50%;
+    --accent-foreground: 0 0% 7%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 7%;
 
-    --border: 215 23% 32%;
-    --input: 215 23% 32%;
-    --ring: 200 98% 56%;
+    --border: 0 0% 20%;
+    --input: 0 0% 12%;
+    --ring: 217 100% 50%;
 
     /* Transport-inspired accent colors */
-    --transport-active: 48 96% 53%;
-    --transport-available: 122 71% 60%;
+    --transport-active: 217 100% 50%;
+    --transport-available: 128 100% 40%;
     --transport-warning: 24 100% 53%;
 
-    --sidebar-background: 220 56% 11%;
-    --sidebar-foreground: 210 14% 90%;
-    --sidebar-primary: 200 98% 56%;
-    --sidebar-primary-foreground: 220 56% 11%;
-    --sidebar-accent: 122 71% 60%;
-    --sidebar-accent-foreground: 220 56% 11%;
-    --sidebar-border: 215 23% 32%;
-    --sidebar-ring: 200 98% 56%;
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 97%;
+    --sidebar-primary: 217 100% 50%;
+    --sidebar-primary-foreground: 0 0% 7%;
+    --sidebar-accent: 128 100% 40%;
+    --sidebar-accent-foreground: 0 0% 7%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 217 100% 50%;
   }
 }
 
