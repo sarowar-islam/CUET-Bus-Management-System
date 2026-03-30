@@ -59,7 +59,7 @@ const RequestBus = () => {
       requesterRole: user?.role as 'teacher' | 'staff',
       purpose: formData.purpose,
       reason: formData.reason,
-      transportType: formData.transportType,
+      transportType: formData.transportType as 'bus' | 'minibus' | 'car' | 'ambulance',
       duration: formData.duration,
       date: formData.date,
       startTime: formData.startTime,
