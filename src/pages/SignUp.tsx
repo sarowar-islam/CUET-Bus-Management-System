@@ -43,13 +43,6 @@ const SignUp = () => {
       icon: <Users className="w-8 h-8" />,
       color: 'bg-orange-500/10 hover:bg-orange-500/20 border-orange-200 hover:border-orange-300',
     },
-    {
-      role: 'admin' as UserRole,
-      title: 'Admin',
-      description: 'System administration access',
-      icon: <Shield className="w-8 h-8" />,
-      color: 'bg-purple-500/10 hover:bg-purple-500/20 border-purple-200 hover:border-purple-300',
-    },
   ];
 
   const passwordsMatch = password === confirmPassword && password.length > 0;
