@@ -1,11 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Bus, Clock, MapPin, Shield, Users, ArrowRight, CheckCircle } from 'lucide-react';
+import { Bus, Clock, MapPin, Shield, Users, ArrowRight, CheckCircle, Sun, Moon } from 'lucide-react';
 import { buses, routes, schedules } from '@/data/dummyData';
 
 const Landing = () => {
+  const { theme, toggleTheme } = useTheme();
+
   const features = [
     {
       icon: <Bus className="w-6 h-6" />,
@@ -47,6 +50,19 @@ const Landing = () => {
             <span className="font-bold text-xl text-foreground">CUET Transport Section</span>
           </div>
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="rounded-full"
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? (
+                <Sun className="w-5 h-5" />
+              ) : (
+                <Moon className="w-5 h-5" />
+              )}
+            </Button>
             <Link to="/signin">
               <Button variant="ghost">Sign In</Button>
             </Link>
