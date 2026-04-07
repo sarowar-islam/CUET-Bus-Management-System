@@ -64,7 +64,7 @@ const SignUp = () => {
 
     setIsLoading(true);
 
-    const result = await signup({ fullName, username, email, password });
+    const result = await signup({ fullName, username, email, password, role: selectedRole || undefined });
     
     if (result.success) {
       navigate('/signin', { state: { message: 'Account created successfully! Please sign in.' } });

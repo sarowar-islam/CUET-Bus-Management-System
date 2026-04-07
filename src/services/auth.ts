@@ -1,6 +1,5 @@
 import api from './api';
 import { User, UserRole } from '@/data/types';
-import { users } from '@/data/dummyData';
 
 export interface LoginRequest {
   username: string;
@@ -12,6 +11,7 @@ export interface SignupRequest {
   username: string;
   email: string;
   password: string;
+  role?: UserRole;
 }
 
 export interface AuthResponse {
@@ -27,30 +27,16 @@ export interface AuthResponse {
 // Auth API calls
 export const authService = {
   login: async (request: LoginRequest): Promise<AuthResponse> => {
-    // Development: Use dummy data for authentication
-    const user = users.find(
-      (u) => u.username === request.username && u.password === request.password
-    );
-
-    if (user) {
-      // Create a dummy JWT-like token
-      const token = btoa(JSON.stringify({ userId: user.id, username: user.username, role: user.role }));
-      
+    try {
+      const response = await api.post('/api/auth/login', request);
+      return response.data;
+    } catch (error: any) {
       return {
-        success: true,
-        message: 'Login successful',
-        data: {
-          user,
-          token,
-        },
+        success: false,
+        message: 'Login failed',
+        error: error.response?.data?.error || error.response?.data?.message || error.message || 'Invalid credentials',
       };
     }
-
-    return {
-      success: false,
-      message: 'Login failed',
-      error: 'Invalid credentials',
-    };
   },
 
   signup: async (request: SignupRequest): Promise<AuthResponse> => {

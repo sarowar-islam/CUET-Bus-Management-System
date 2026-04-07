@@ -16,6 +16,7 @@ interface SignupData {
   username: string;
   email: string;
   password: string;
+  role?: UserRole;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -70,6 +71,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         username: data.username,
         email: data.email,
         password: data.password,
+        role: data.role,
       });
       
       if (response.success) {
