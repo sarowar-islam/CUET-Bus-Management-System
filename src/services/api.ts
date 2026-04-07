@@ -1,12 +1,16 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-// Get API base URL from environment or default to localhost
-const rawApiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8080';
-const API_BASE_URL = rawApiUrl.replace(/\/$/, '').replace(/\/api$/, '');
+const DEFAULT_API_URL = 'https://cuet-transport-backend-production.up.railway.app';
+const envApiUrl = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || DEFAULT_API_URL).trim();
+const normalizedApiUrl = /^https?:\/\//i.test(envApiUrl) ? envApiUrl : `https://${envApiUrl}`;
+const API_BASE_URL = normalizedApiUrl.replace(/\/$/, '').replace(/\/api$/, '');
+const parsedTimeout = Number(import.meta.env.VITE_API_TIMEOUT);
+const API_TIMEOUT = Number.isFinite(parsedTimeout) && parsedTimeout > 0 ? parsedTimeout : 30000;
 
 // Create axios instance with proper configuration
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
+  timeout: API_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },
