@@ -5,7 +5,7 @@ import { authService } from '@/services/auth';
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string; requiresVerification?: boolean; verificationIdentifier?: string }>;
   signup: (data: SignupData) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -46,19 +46,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(false);
   }, []);
 
-  const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const login = async (
+    username: string,
+    password: string
+  ): Promise<{ success: boolean; error?: string; requiresVerification?: boolean; verificationIdentifier?: string }> => {
     try {
       const response = await authService.login({ username, password });
       
       if (response.success && response.data) {
         const { user, token } = response.data;
+
+        if (!token) {
+          return {
+            success: false,
+            error: response.error || 'Login failed',
+            requiresVerification: Boolean(response.data.requiresVerification),
+            verificationIdentifier: response.data.verificationIdentifier || username,
+          };
+        }
+
         setUser(user);
         localStorage.setItem('cuet_bus_user', JSON.stringify(user));
         localStorage.setItem('cuet_bus_token', token);
         return { success: true };
       }
+
+      const errorMessage = response.error || 'Login failed';
+      const requiresVerification = /email not verified/i.test(errorMessage);
       
-      return { success: false, error: response.error || 'Login failed' };
+      return {
+        success: false,
+        error: errorMessage,
+        requiresVerification,
+        verificationIdentifier: requiresVerification ? username : undefined,
+      };
     } catch (error: any) {
       return { success: false, error: 'An error occurred during login' };
     }

@@ -1,0 +1,380 @@
+% Front-End Design Report (LaTeX)
+% Project: CUET Bus Management System
+% Date: 7 April 2026
+
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{setspace}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue,
+  citecolor=blue
+}
+
+\onehalfspacing
+
+% ---------- Edit these fields ----------
+\newcommand{\ProjectName}{CUET Bus Management System}
+\newcommand{\CourseName}{\textit{[Course/Section Name]}}
+\newcommand{\SubmittedTo}{\textit{[Instructor Name]}}
+\newcommand{\SubmittedBy}{\textit{[Your Name]}}
+\newcommand{\StudentId}{\textit{[Your ID]}}
+\newcommand{\Department}{\textit{[Department]}}
+\newcommand{\University}{Chittagong University of Engineering \& Technology (CUET)}
+\newcommand{\ReportDate}{7 April 2026}
+\newcommand{\RepoLink}{\texttt{[PASTE YOUR REPOSITORY LINK HERE]}}
+
+% ---------- Safe image inclusion (won't fail if file missing) ----------
+\newcommand{\MaybeIncludeGraphics}[2]{%
+  \IfFileExists{#1}{\includegraphics[#2]{#1}}{%
+    \fbox{\parbox{0.95\linewidth}{\textbf{Missing image:} \texttt{#1}\\
+    Add the file in the same folder as this .tex, or update the path.}}%
+  }%
+}
+
+% ---------- Listings setup ----------
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{black!25},
+  backgroundcolor=\color{black!2},
+  showstringspaces=false
+}
+
+\begin{document}
+
+% ---------------- Title Page ----------------
+\begin{titlepage}
+  \centering
+  \vspace*{1.2cm}
+  {\LARGE \textbf{Front-End Design of \ProjectName} \par}
+  \vspace{1.0cm}
+  {\large Report on Front-End (HTML, CSS, JavaScript) Design \par}
+  \vspace{1.2cm}
+
+  \begin{tabular}{>{\bfseries}p{4cm}p{9cm}}
+    Course: & \CourseName\\
+    Submitted To: & \SubmittedTo\\
+    Submitted By: & \SubmittedBy\\
+    Student ID: & \StudentId\\
+    Department: & \Department\\
+    University: & \University\\
+    Date: & \ReportDate\\
+  \end{tabular}
+
+  \vfill
+\end{titlepage}
+
+\tableofcontents
+\listoffigures
+\listoftables
+\clearpage
+
+% =========================================================
+\chapter{Introduction}
+
+\section{Project Overview}
+\ProjectName{} is a web application for managing and viewing campus transportation services for CUET. The frontend is implemented as a single-page application (SPA) using React (JavaScript/TypeScript), which ultimately renders standard HTML in the browser and applies styling through Tailwind CSS and custom CSS variables.
+
+\section{Objective of the Frontend Design}
+The objective of the frontend design is to provide a fast, user-friendly, and responsive interface that helps users achieve these goals:
+\begin{itemize}[leftmargin=1.2cm]
+  \item View bus schedules filtered by user role (student/teacher/staff).
+  \item Explore bus route details and stops using an interactive map.
+  \item Authenticate (sign in/sign up) and manage user preferences (e.g., theme).
+  \item Allow teachers/staff to submit transport (bus) requests.
+  \item Provide an admin panel for managing buses, routes, schedules, drivers, ambulances, and requests.
+\end{itemize}
+
+\section{Core Functionalities}
+Key frontend functionalities include:
+\begin{itemize}[leftmargin=1.2cm]
+  \item \textbf{Routing}: Page navigation via React Router (e.g., \texttt{/}, \texttt{/signin}, \texttt{/dashboard}, \texttt{/admin/*}).
+  \item \textbf{Role-based access control}: Protected routes redirect unauthenticated users to Sign In, and restrict admin-only pages.
+  \item \textbf{UI interactions}: Forms, dialogs, dropdown menus, tabs, and toasts.
+  \item \textbf{Theme switching}: Light/Dark mode with persistence in localStorage.
+  \item \textbf{Data integration}: Demo data from local mock data and API calls via Axios (configurable base URL).
+\end{itemize}
+
+% =========================================================
+\chapter{Basic Structure of the Webpage}
+
+\section{UML Diagram}
+Figure~\ref{fig:uml} shows the major pages/components of the frontend application.
+
+\begin{figure}[H]
+  \centering
+  \MaybeIncludeGraphics{uml.png}{width=0.95\linewidth}
+  \caption{UML diagram of major frontend pages/components (provided as \texttt{uml.png}).}
+  \label{fig:uml}
+\end{figure}
+
+\section{Dataflow Diagram (DFD)}
+Figure~\ref{fig:dfd} summarizes how data moves between key frontend components, local storage, external services, and (optional) backend APIs.
+
+\begin{figure}[H]
+  \centering
+  \MaybeIncludeGraphics{dfd.png}{width=0.95\linewidth}
+  \caption{Data flow diagram for the frontend (provided as \texttt{dfd.png}).}
+  \label{fig:dfd}
+\end{figure}
+
+\section{HTML Structure of the Pages}
+Although this project uses React, each screen is rendered into standard HTML. The root HTML file provides the mount point, and React renders page components inside it.
+
+\subsection{Root HTML Document}
+The application starts from a minimal \texttt{index.html} containing a root container:\\
+\begin{lstlisting}[language=HTML,caption={Simplified root HTML structure}]
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CUET Transport Section</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+\end{lstlisting}
+
+\subsection{Page-Level Structure (Component-Based)}
+The SPA is organized into pages (routes) and shared layouts:
+\begin{itemize}[leftmargin=1.2cm]
+  \item \textbf{Layouts}: \textit{User layout} (fixed top navbar + main content) and \textit{Admin layout} (sidebar + top bar + main content).
+  \item \textbf{Shared UI components}: buttons, cards, inputs, dialogs, dropdown menus, tabs, badges, etc.
+  \item \textbf{Pages}: Landing, Sign In/Up, Dashboard, Bus Details (map), Ambulance Services, Settings, Request Bus, and Admin pages.
+\end{itemize}
+
+\subsection{Route Map (Pages and URLs)}
+Table~\ref{tab:routes} lists the major pages and their purpose.
+
+\begin{longtable}{p{4cm}p{10.5cm}}
+\caption{Main routes/pages in the frontend}\label{tab:routes}\\
+\toprule
+\textbf{Route (URL)} & \textbf{Purpose / Main Content}\\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Route (URL)} & \textbf{Purpose / Main Content}\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+
+\texttt{/} & Landing page with navigation links, hero section, features, user categories, and footer.\\
+\texttt{/signin} & Sign in form (username/password), demo credentials section, redirects to dashboard on success.\\
+\texttt{/signup} & Sign up form for creating an account (stored in localStorage in demo mode).\\
+\texttt{/dashboard} & Main dashboard; shows overview cards, bus schedules by direction, and admin overview (if role = admin).\\
+\texttt{/bus/:scheduleId} & Bus schedule details with route stops and an interactive Mapbox map.\\
+\texttt{/ambulance} & Ambulance services page; request dialog, status badges, toasts, simulated assignment.\\
+\texttt{/request-bus} & Teacher/staff bus request form (dialog) with request tracking and status badges.\\
+\texttt{/settings} & Profile update, dark mode toggle, account deletion confirmation dialog.\\
+\texttt{/admin/buses} & Admin management page for buses (CRUD-style UI).\\
+\texttt{/admin/routes} & Admin management page for routes and stops.\\
+\texttt{/admin/schedules} & Admin management page for schedules and categories.\\
+\texttt{/admin/drivers} & Admin management page for drivers.\\
+\texttt{/admin/ambulances} & Admin management page for ambulances.\\
+\texttt{/admin/bus-requests} & Admin view of submitted transport requests (approve/reject).\\
+\texttt{*} & NotFound page for invalid routes.\\
+\end{longtable}
+
+\subsection{Common Navigation, Main Content, and Footer}
+\begin{itemize}[leftmargin=1.2cm]
+  \item \textbf{Navigation bar (header)}: implemented as a \texttt{<header>} container with logo (\texttt{<img>}), links (React \texttt{<Link>}), theme toggle button, and a profile dropdown.
+  \item \textbf{Main content (main)}: implemented as \texttt{<main>} wrapping page-specific cards, forms, grids, and lists.
+  \item \textbf{Footer}: present on the Landing page as a \texttt{<footer>} section.
+\end{itemize}
+
+\section{Screenshots: Basic, Unstyled HTML Layouts}
+To satisfy the ``basic HTML screenshots'' requirement, screenshots can be captured by temporarily disabling CSS in the browser (DevTools) or by using a minimal HTML wireframe export.
+
+\subsection{Placeholder Screenshots (Add Your Own)}
+Place your screenshot images next to this \texttt{.tex} file (or update the paths). Recommended filenames:
+\begin{itemize}[leftmargin=1.2cm]
+  \item \texttt{landing-unstyled.png}
+  \item \texttt{signin-unstyled.png}
+  \item \texttt{dashboard-unstyled.png}
+  \item \texttt{busdetails-unstyled.png}
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.48\linewidth}
+    \centering
+    \MaybeIncludeGraphics{landing-unstyled.png}{width=\linewidth}
+    \caption{Landing page (unstyled HTML layout)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\linewidth}
+    \centering
+    \MaybeIncludeGraphics{signin-unstyled.png}{width=\linewidth}
+    \caption{Sign In page (unstyled HTML layout)}
+  \end{subfigure}
+
+  \vspace{0.6cm}
+
+  \begin{subfigure}[b]{0.48\linewidth}
+    \centering
+    \MaybeIncludeGraphics{dashboard-unstyled.png}{width=\linewidth}
+    \caption{Dashboard page (unstyled HTML layout)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\linewidth}
+    \centering
+    \MaybeIncludeGraphics{busdetails-unstyled.png}{width=\linewidth}
+    \caption{Bus Details page (unstyled HTML layout)}
+  \end{subfigure}
+  \caption{Basic, unstyled layout screenshots (CSS disabled in browser)\label{fig:unstyled}}
+\end{figure}
+
+% =========================================================
+\chapter{Styling Using CSS}
+
+\section{Elements Considered During Styling}
+The UI is styled primarily using Tailwind CSS utility classes and a small set of custom CSS variables (design tokens) defined in the global stylesheet. The following elements were styled:
+\begin{itemize}[leftmargin=1.2cm]
+  \item \textbf{Typography}: headings, labels, muted helper text, role badges.
+  \item \textbf{Buttons}: primary/secondary/outline/ghost, icon buttons, disabled/loading states.
+  \item \textbf{Forms}: inputs, password visibility toggle, selects, textareas, validation requirements.
+  \item \textbf{Cards and containers}: shadows, rounded corners, borders, gradients, section spacing.
+  \item \textbf{Navigation}: fixed header, admin sidebar, active link styling, dropdown menus.
+  \item \textbf{Feedback components}: toasts, alerts, dialogs, badges for status (pending/approved/etc.).
+  \item \textbf{Responsive design}: mobile-first layouts, grid breakpoints, overflow handling in dialogs.
+\end{itemize}
+
+\section{Layout Models Used}
+\begin{itemize}[leftmargin=1.2cm]
+  \item \textbf{Flexbox}: used for horizontal/vertical alignment (navbars, toolbar actions, card headers).
+  \item \textbf{CSS Grid}: used for dashboards, stats panels, responsive card grids, and multi-column layouts.
+  \item \textbf{Utility-first styling}: Tailwind utilities define spacing, typography, borders, colors, and responsive behavior.
+\end{itemize}
+
+\section{Styled Page Screenshots}
+Add screenshots after styling (normal app appearance). Recommended filenames:
+\begin{itemize}[leftmargin=1.2cm]
+  \item \texttt{landing-styled.png}
+  \item \texttt{signin-styled.png}
+  \item \texttt{dashboard-styled.png}
+  \item \texttt{busdetails-styled.png}
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.48\linewidth}
+    \centering
+    \MaybeIncludeGraphics{landing-styled.png}{width=\linewidth}
+    \caption{Landing page (styled)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\linewidth}
+    \centering
+    \MaybeIncludeGraphics{signin-styled.png}{width=\linewidth}
+    \caption{Sign In page (styled)}
+  \end{subfigure}
+
+  \vspace{0.6cm}
+
+  \begin{subfigure}[b]{0.48\linewidth}
+    \centering
+    \MaybeIncludeGraphics{dashboard-styled.png}{width=\linewidth}
+    \caption{Dashboard page (styled)}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\linewidth}
+    \centering
+    \MaybeIncludeGraphics{busdetails-styled.png}{width=\linewidth}
+    \caption{Bus Details page (styled)}
+  \end{subfigure}
+  \caption{Screenshots after applying CSS/Tailwind styling\label{fig:styled}}
+\end{figure}
+
+% =========================================================
+\chapter{Interactive UI}
+
+\section{Pure JavaScript (Vanilla)}
+This project is primarily built using React (a JavaScript framework). However, some direct browser APIs are used (which are still JavaScript):
+\begin{itemize}[leftmargin=1.2cm]
+  \item \textbf{localStorage}: storing auth token/user info and theme preference.
+  \item \textbf{window.location}: redirecting in certain flows (e.g., unauthorized access handling).
+  \item \textbf{setTimeout}: simulating asynchronous updates (e.g., ambulance assignment after request submission).
+\end{itemize}
+
+\section{JavaScript Frameworks / Libraries Used}
+\subsection{React (with TypeScript)}
+React is used to build reusable UI components and manage interactive state. Key usage patterns include:
+\begin{itemize}[leftmargin=1.2cm]
+  \item \textbf{Component-based UI}: pages and shared layout components.
+  \item \textbf{Hooks}: \texttt{useState}, \texttt{useEffect}, \texttt{useRef} for UI state, side effects, and map container references.
+  \item \textbf{Context API}: authentication state (user, role, login/logout) and theme state (light/dark).
+\end{itemize}
+
+\subsection{React Router}
+Routing provides SPA navigation without full page reloads. Protected routes enforce authentication and role-based restrictions.
+
+\subsection{Tailwind CSS + shadcn/ui}
+Tailwind provides utility classes for rapid styling; shadcn/ui components (built on Radix UI) provide accessible primitives like dialogs, dropdown menus, tabs, and toasts.
+
+\subsection{Axios (API Communication)}
+An Axios instance is configured with an interceptor to attach the JWT token to requests. The base API URL and timeout are configurable through environment variables.
+
+\subsection{Mapbox GL JS}
+Mapbox is used to render an interactive route map on the Bus Details page. The frontend draws a route line (GeoJSON) and adds markers for stops with popups.
+
+% =========================================================
+\chapter{Discussion}
+
+\section{Main Challenges}
+Based on the implemented frontend, the main challenges typically encountered include:
+\begin{itemize}[leftmargin=1.2cm]
+  \item \textbf{Role-based UX}: ensuring that admin features are accessible only to admin users while keeping the student/teacher/staff experience simple.
+  \item \textbf{State persistence}: keeping login and theme state persistent across refreshes using localStorage.
+  \item \textbf{Responsive layouts}: implementing navbar/sidebar behavior for both mobile and desktop screens.
+  \item \textbf{Map integration}: initializing and cleaning up Mapbox maps correctly, and handling map load errors gracefully.
+  \item \textbf{Form UX}: building multi-field request forms with clear feedback (dialogs + toasts + badges).
+\end{itemize}
+
+\section{Unimplemented / Future Features}
+Some features that are commonly proposed but not fully implemented in a demo/frontend-only setup:
+\begin{itemize}[leftmargin=1.2cm]
+  \item \textbf{Production authentication backend}: replace demo/localStorage auth with a secure server-side auth flow.
+  \item \textbf{Real-time notifications}: implement real-time schedule updates and push/email/SMS notifications.
+  \item \textbf{Live GPS tracking}: show real bus/ambulance live location instead of simulated updates.
+  \item \textbf{Backend-driven data}: load buses/routes/schedules from the backend (instead of mock data) with caching and error states.
+  \item \textbf{Admin CRUD persistence}: ensure admin changes are saved to the database via API calls.
+\end{itemize}
+
+% =========================================================
+\appendix
+\chapter{Appendices}
+
+\section{Frontend Source Code Repository}
+Repository / source code link:
+
+\begin{center}
+  \RepoLink
+\end{center}
+
+\section{How to Compile This Report}
+\begin{itemize}[leftmargin=1.2cm]
+  \item Place \texttt{FrontEnd\_Design\_Report.tex}, \texttt{uml.png}, \texttt{dfd.png}, and your screenshot images in the same folder (or update paths).
+  \item Compile with any LaTeX engine (Overleaf, TeX Live, MikTeX). Example: \texttt{pdflatex FrontEnd\_Design\_Report.tex}.
+\end{itemize}
+
+\end{document}

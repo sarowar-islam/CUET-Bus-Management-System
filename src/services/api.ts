@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-const DEFAULT_API_URL = 'https://cuet-transport-backend-production.up.railway.app';
+const DEFAULT_API_URL = 'https://cuet-transport-backend-wd78.onrender.com';
 const envApiUrl = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || DEFAULT_API_URL).trim();
 const normalizedApiUrl = /^https?:\/\//i.test(envApiUrl) ? envApiUrl : `https://${envApiUrl}`;
 const API_BASE_URL = normalizedApiUrl.replace(/\/$/, '').replace(/\/api$/, '');

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Bus, Eye, EyeOff } from 'lucide-react';
 
 const SignIn = () => {
+  const location = useLocation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -15,6 +16,7 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const infoMessage = (location.state as { message?: string } | null)?.message;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +27,13 @@ const SignIn = () => {
     
     if (result.success) {
       navigate('/dashboard');
+    } else if (result.requiresVerification) {
+      navigate('/verify-email', {
+        state: {
+          identifier: result.verificationIdentifier || username,
+          message: 'A verification code has been sent to your email. Please verify to continue.',
+        },
+      });
     } else {
       setError(result.error || 'Login failed');
     }
@@ -53,6 +62,12 @@ const SignIn = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {infoMessage && !error && (
+                <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm text-center">
+                  {infoMessage}
+                </div>
+              )}
+
               {error && (
                 <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center">
                   {error}
