@@ -1,13 +1,35 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Bus, Clock, MapPin, Shield, Users, ArrowRight, CheckCircle, Sun, Moon } from 'lucide-react';
-import { buses, routes, schedules } from '@/data/dummyData';
+import { busRepository, routeRepository, scheduleRepository } from '@/services/repositories';
 
 const Landing = () => {
   const { theme, toggleTheme } = useTheme();
+  const [busCount, setBusCount] = useState(0);
+  const [routeCount, setRouteCount] = useState(0);
+  const [scheduleCount, setScheduleCount] = useState(0);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const [buses, routes, schedules] = await Promise.all([
+          busRepository.getAll(),
+          routeRepository.getAll(),
+          scheduleRepository.getAll(),
+        ]);
+        setBusCount(buses.length);
+        setRouteCount(routes.length);
+        setScheduleCount(schedules.length);
+      } catch {
+        // Keep landing page usable if backend is temporarily unavailable.
+      }
+    };
+
+    loadStats();
+  }, []);
 
   const features = [
     {
@@ -108,15 +130,15 @@ const Landing = () => {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto mt-16">
             <div className="text-center">
-              <p className="text-3xl md:text-4xl font-bold text-primary">{buses.length}</p>
+              <p className="text-3xl md:text-4xl font-bold text-primary">{busCount}</p>
               <p className="text-sm text-muted-foreground">Buses</p>
             </div>
             <div className="text-center">
-              <p className="text-3xl md:text-4xl font-bold text-primary">{routes.length}</p>
+              <p className="text-3xl md:text-4xl font-bold text-primary">{routeCount}</p>
               <p className="text-sm text-muted-foreground">Routes</p>
             </div>
             <div className="text-center">
-              <p className="text-3xl md:text-4xl font-bold text-primary">{schedules.length}</p>
+              <p className="text-3xl md:text-4xl font-bold text-primary">{scheduleCount}</p>
               <p className="text-sm text-muted-foreground">Daily Trips</p>
             </div>
           </div>

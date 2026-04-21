@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,12 +21,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Users, Plus, Pencil, Trash2, Search, Phone, User } from 'lucide-react';
-import { drivers as initialDrivers } from '@/data/dummyData';
 import { Driver } from '@/data/types';
 import { useToast } from '@/hooks/use-toast';
+import { driverRepository } from '@/services/repositories';
 
 const AdminDrivers = () => {
-  const [drivers, setDrivers] = useState<Driver[]>(initialDrivers);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
@@ -36,29 +36,54 @@ const AdminDrivers = () => {
   });
   const { toast } = useToast();
 
+  useEffect(() => {
+    const loadDrivers = async () => {
+      try {
+        const data = await driverRepository.getAll();
+        setDrivers(data);
+      } catch (error: any) {
+        toast({
+          title: 'Failed to load drivers',
+          description: error?.response?.data?.message || 'Could not fetch drivers from backend.',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    loadDrivers();
+  }, [toast]);
+
   const filteredDrivers = drivers.filter(driver =>
     driver.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     driver.phone.includes(searchQuery)
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (editingDriver) {
-      setDrivers(drivers.map(d => 
-        d.id === editingDriver.id 
-          ? { ...d, name: formData.name, phone: formData.phone }
-          : d
-      ));
-      toast({ title: 'Success', description: 'Driver updated successfully.' });
-    } else {
-      const newDriver: Driver = {
-        id: `d${Date.now()}`,
-        name: formData.name,
-        phone: formData.phone,
-      };
-      setDrivers([...drivers, newDriver]);
-      toast({ title: 'Success', description: 'New driver added successfully.' });
+    try {
+      if (editingDriver) {
+        const updated = await driverRepository.update(editingDriver.id, {
+          name: formData.name,
+          phone: formData.phone,
+        });
+        setDrivers((prev) => prev.map((d) => (d.id === editingDriver.id ? updated : d)));
+        toast({ title: 'Success', description: 'Driver updated successfully.' });
+      } else {
+        const created = await driverRepository.create({
+          name: formData.name,
+          phone: formData.phone,
+        });
+        setDrivers((prev) => [...prev, created]);
+        toast({ title: 'Success', description: 'New driver added successfully.' });
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Save failed',
+        description: error?.response?.data?.message || 'Could not save driver.',
+        variant: 'destructive',
+      });
+      return;
     }
     
     setIsDialogOpen(false);
@@ -75,9 +100,18 @@ const AdminDrivers = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (driverId: string) => {
-    setDrivers(drivers.filter(d => d.id !== driverId));
-    toast({ title: 'Deleted', description: 'Driver removed successfully.' });
+  const handleDelete = async (driverId: string) => {
+    try {
+      await driverRepository.delete(driverId);
+      setDrivers((prev) => prev.filter((d) => d.id !== driverId));
+      toast({ title: 'Deleted', description: 'Driver removed successfully.' });
+    } catch (error: any) {
+      toast({
+        title: 'Delete failed',
+        description: error?.response?.data?.message || 'Could not delete driver.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleOpenDialog = () => {

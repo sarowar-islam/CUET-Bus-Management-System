@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import UserLayout from '@/components/layout/UserLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,19 +16,19 @@ import {
 } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { busRequests as initialRequests, buses } from '@/data/dummyData';
-import { BusRequest } from '@/data/types';
+import { Bus as BusType, BusRequest } from '@/data/types';
 import { Bus, Calendar, Clock, MapPin, Users, Plus, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { busRepository, busRequestRepository } from '@/services/repositories';
 
 const RequestBus = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const [requests, setRequests] = useState<BusRequest[]>(
-    initialRequests.filter(r => r.requesterId === user?.id)
-  );
+  const [requests, setRequests] = useState<BusRequest[]>([]);
+  const [buses, setBuses] = useState<BusType[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     requesterName: user?.fullName || '',
     requesterPosition: '',
@@ -46,55 +46,95 @@ const RequestBus = () => {
     expectedPassengers: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const newRequest: BusRequest = {
-      id: `breq${Date.now()}`,
-      requesterId: user?.id || '',
-      requesterName: formData.requesterName || user?.fullName || '',
-      requesterPhone: formData.mobile || '',
-      requesterPosition: formData.requesterPosition || '',
-      requesterDepartment: formData.requesterDepartment || '',
-      requesterRole: user?.role as 'teacher' | 'staff',
-      purpose: formData.purpose,
-      reason: formData.reason,
-      transportType: formData.transportType as 'bus' | 'minibus' | 'car' | 'ambulance',
-      duration: formData.duration,
-      date: formData.date,
-      startTime: formData.startTime,
-      endTime: formData.endTime,
-      pickupLocation: formData.pickupLocation,
-      destination: formData.destination,
-      expectedPassengers: parseInt(formData.expectedPassengers),
-      status: 'pending',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [allBuses, userRequests] = await Promise.all([
+          busRepository.getAll(),
+          user?.id ? busRequestRepository.getByRequesterId(String(user.id)) : Promise.resolve([]),
+        ]);
+        setBuses(allBuses);
+        setRequests(userRequests);
+      } catch (error: any) {
+        toast({
+          title: 'Failed to load requests',
+          description: error?.response?.data?.message || 'Could not load your bus requests.',
+          variant: 'destructive',
+        });
+      }
     };
 
-    setRequests([newRequest, ...requests]);
-    setIsDialogOpen(false);
-    setFormData({
-      requesterName: user?.fullName || '',
-      requesterPosition: '',
-      requesterDepartment: '',
-      mobile: '',
-      purpose: '',
-      reason: '',
-      transportType: 'bus',
-      duration: '',
-      date: '',
-      startTime: '',
-      endTime: '',
-      pickupLocation: '',
-      destination: '',
-      expectedPassengers: '',
-    });
+    loadData();
+  }, [user?.id, toast]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!user?.id) {
+      toast({ title: 'Authentication required', description: 'Please sign in again.', variant: 'destructive' });
+      return;
+    }
+
+    if (user.role !== 'teacher' && user.role !== 'staff') {
+      toast({ title: 'Not allowed', description: 'Only teacher/staff can submit bus requests.', variant: 'destructive' });
+      return;
+    }
+
+    setIsSubmitting(true);
     
-    toast({
-      title: 'Request Submitted!',
-      description: 'Your bus request has been sent to the admin for approval.',
-    });
+    try {
+      const created = await busRequestRepository.create({
+        requesterId: String(user.id),
+        requesterName: formData.requesterName || user.fullName || '',
+        requesterPhone: formData.mobile || '',
+        requesterPosition: formData.requesterPosition || '',
+        requesterDepartment: formData.requesterDepartment || '',
+        requesterRole: user.role,
+        purpose: formData.purpose,
+        reason: formData.reason,
+        transportType: formData.transportType as 'bus' | 'minibus' | 'car' | 'ambulance',
+        duration: formData.duration,
+        date: formData.date,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        pickupLocation: formData.pickupLocation,
+        destination: formData.destination,
+        expectedPassengers: parseInt(formData.expectedPassengers, 10),
+        status: 'pending',
+      });
+
+      setRequests((prev) => [created, ...prev]);
+      setIsDialogOpen(false);
+      setFormData({
+        requesterName: user?.fullName || '',
+        requesterPosition: '',
+        requesterDepartment: '',
+        mobile: '',
+        purpose: '',
+        reason: '',
+        transportType: 'bus',
+        duration: '',
+        date: '',
+        startTime: '',
+        endTime: '',
+        pickupLocation: '',
+        destination: '',
+        expectedPassengers: '',
+      });
+
+      toast({
+        title: 'Request Submitted!',
+        description: 'Your bus request has been sent to the admin for approval.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Failed to submit request',
+        description: error?.response?.data?.message || 'Could not submit bus request.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getStatusBadge = (status: BusRequest['status']) => {
@@ -353,7 +393,7 @@ const RequestBus = () => {
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit">
+                  <Button type="submit" disabled={isSubmitting}>
                     Submit Request
                   </Button>
                 </div>

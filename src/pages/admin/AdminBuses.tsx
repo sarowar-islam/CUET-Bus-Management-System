@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,12 +21,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Bus, Plus, Pencil, Trash2, Search } from 'lucide-react';
-import { buses as initialBuses } from '@/data/dummyData';
 import { Bus as BusType } from '@/data/types';
 import { useToast } from '@/hooks/use-toast';
+import { busRepository } from '@/services/repositories';
 
 const AdminBuses = () => {
-  const [buses, setBuses] = useState<BusType[]>(initialBuses);
+  const [buses, setBuses] = useState<BusType[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBus, setEditingBus] = useState<BusType | null>(null);
@@ -37,32 +37,56 @@ const AdminBuses = () => {
   });
   const { toast } = useToast();
 
+  useEffect(() => {
+    const loadBuses = async () => {
+      try {
+        const data = await busRepository.getAll();
+        setBuses(data);
+      } catch (error: any) {
+        toast({
+          title: 'Failed to load buses',
+          description: error?.response?.data?.message || 'Could not fetch buses from backend.',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    loadBuses();
+  }, [toast]);
+
   const filteredBuses = buses.filter(bus =>
     bus.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     bus.plateNumber.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (editingBus) {
-      // Update existing bus
-      setBuses(buses.map(b => 
-        b.id === editingBus.id 
-          ? { ...b, name: formData.name, capacity: parseInt(formData.capacity), plateNumber: formData.plateNumber }
-          : b
-      ));
-      toast({ title: 'Success', description: 'Bus updated successfully.' });
-    } else {
-      // Add new bus
-      const newBus: BusType = {
-        id: `b${Date.now()}`,
-        name: formData.name,
-        capacity: parseInt(formData.capacity),
-        plateNumber: formData.plateNumber,
-      };
-      setBuses([...buses, newBus]);
-      toast({ title: 'Success', description: 'New bus added successfully.' });
+    try {
+      if (editingBus) {
+        const updated = await busRepository.update(editingBus.id, {
+          name: formData.name,
+          capacity: parseInt(formData.capacity, 10),
+          plateNumber: formData.plateNumber,
+        });
+        setBuses((prev) => prev.map((b) => (b.id === editingBus.id ? updated : b)));
+        toast({ title: 'Success', description: 'Bus updated successfully.' });
+      } else {
+        const created = await busRepository.create({
+          name: formData.name,
+          capacity: parseInt(formData.capacity, 10),
+          plateNumber: formData.plateNumber,
+        });
+        setBuses((prev) => [...prev, created]);
+        toast({ title: 'Success', description: 'New bus added successfully.' });
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Save failed',
+        description: error?.response?.data?.message || 'Could not save bus.',
+        variant: 'destructive',
+      });
+      return;
     }
     
     setIsDialogOpen(false);
@@ -80,9 +104,18 @@ const AdminBuses = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (busId: string) => {
-    setBuses(buses.filter(b => b.id !== busId));
-    toast({ title: 'Deleted', description: 'Bus removed successfully.' });
+  const handleDelete = async (busId: string) => {
+    try {
+      await busRepository.delete(busId);
+      setBuses((prev) => prev.filter((b) => b.id !== busId));
+      toast({ title: 'Deleted', description: 'Bus removed successfully.' });
+    } catch (error: any) {
+      toast({
+        title: 'Delete failed',
+        description: error?.response?.data?.message || 'Could not delete bus.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleOpenDialog = () => {

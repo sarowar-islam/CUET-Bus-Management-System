@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,6 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { ambulances as initialAmbulances, ambulanceRequests as initialRequests } from '@/data/dummyData';
 import { Ambulance, AmbulanceRequest } from '@/data/types';
 import { 
   Ambulance as AmbulanceIcon, 
@@ -52,15 +51,17 @@ import {
   User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ambulanceRepository, ambulanceRequestRepository } from '@/services/repositories';
 
 const AdminAmbulances = () => {
   const { toast } = useToast();
   
-  const [ambulances, setAmbulances] = useState<Ambulance[]>(initialAmbulances);
-  const [requests, setRequests] = useState<AmbulanceRequest[]>(initialRequests);
+  const [ambulances, setAmbulances] = useState<Ambulance[]>([]);
+  const [requests, setRequests] = useState<AmbulanceRequest[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAmbulance, setEditingAmbulance] = useState<Ambulance | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [formData, setFormData] = useState({
     vehicleNumber: '',
     driverName: '',
@@ -77,29 +78,53 @@ const AdminAmbulances = () => {
   const completedRequests = requests.filter(r => r.status === 'completed' || r.status === 'cancelled');
   const availableAmbulances = ambulances.filter(a => a.status === 'available');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [allAmbulances, allRequests] = await Promise.all([
+          ambulanceRepository.getAll(),
+          ambulanceRequestRepository.getAll(),
+        ]);
+        setAmbulances(allAmbulances);
+        setRequests(allRequests);
+      } catch (error: any) {
+        toast({
+          title: 'Failed to load ambulance data',
+          description: error?.response?.data?.message || 'Could not load ambulances and requests.',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    loadData();
+  }, [toast]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsProcessing(true);
     
-    if (editingAmbulance) {
-      setAmbulances(ambulances.map(a => 
-        a.id === editingAmbulance.id 
-          ? { ...a, ...formData }
-          : a
-      ));
-      toast({ title: 'Success', description: 'Ambulance updated successfully.' });
-    } else {
-      const newAmbulance: Ambulance = {
-        id: `amb${Date.now()}`,
-        ...formData,
-        currentLocation: { latitude: 22.4617, longitude: 91.9714, timestamp: new Date() },
-      };
-      setAmbulances([...ambulances, newAmbulance]);
-      toast({ title: 'Success', description: 'New ambulance added successfully.' });
+    try {
+      if (editingAmbulance) {
+        const updated = await ambulanceRepository.update(editingAmbulance.id, formData);
+        setAmbulances((prev) => prev.map((a) => (a.id === editingAmbulance.id ? updated : a)));
+        toast({ title: 'Success', description: 'Ambulance updated successfully.' });
+      } else {
+        const created = await ambulanceRepository.create(formData);
+        setAmbulances((prev) => [...prev, created]);
+        toast({ title: 'Success', description: 'New ambulance added successfully.' });
+      }
+      setIsDialogOpen(false);
+      setEditingAmbulance(null);
+      setFormData({ vehicleNumber: '', driverName: '', driverPhone: '', status: 'available' });
+    } catch (error: any) {
+      toast({
+        title: 'Save failed',
+        description: error?.response?.data?.message || 'Could not save ambulance details.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
     }
-    
-    setIsDialogOpen(false);
-    setEditingAmbulance(null);
-    setFormData({ vehicleNumber: '', driverName: '', driverPhone: '', status: 'available' });
   };
 
   const handleEdit = (ambulance: Ambulance) => {
@@ -113,35 +138,59 @@ const AdminAmbulances = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    setAmbulances(ambulances.filter(a => a.id !== id));
-    toast({ title: 'Deleted', description: 'Ambulance removed successfully.' });
-  };
-
-  const handleAssignAmbulance = (requestId: string, ambulanceId: string) => {
-    setRequests(requests.map(r => 
-      r.id === requestId 
-        ? { ...r, status: 'assigned', ambulanceId, updatedAt: new Date() }
-        : r
-    ));
-    setAmbulances(ambulances.map(a => 
-      a.id === ambulanceId ? { ...a, status: 'on_duty' } : a
-    ));
-    toast({ title: 'Assigned', description: 'Ambulance assigned to request.' });
-  };
-
-  const handleCompleteRequest = (requestId: string, ambulanceId?: string) => {
-    setRequests(requests.map(r => 
-      r.id === requestId 
-        ? { ...r, status: 'completed', updatedAt: new Date() }
-        : r
-    ));
-    if (ambulanceId) {
-      setAmbulances(ambulances.map(a => 
-        a.id === ambulanceId ? { ...a, status: 'available' } : a
-      ));
+  const handleDelete = async (id: string) => {
+    setIsProcessing(true);
+    try {
+      await ambulanceRepository.delete(id);
+      setAmbulances((prev) => prev.filter((a) => a.id !== id));
+      toast({ title: 'Deleted', description: 'Ambulance removed successfully.' });
+    } catch (error: any) {
+      toast({
+        title: 'Delete failed',
+        description: error?.response?.data?.message || 'Could not delete ambulance.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
     }
-    toast({ title: 'Completed', description: 'Request marked as completed.' });
+  };
+
+  const handleAssignAmbulance = async (requestId: string, ambulanceId: string) => {
+    setIsProcessing(true);
+    try {
+      const updatedRequest = await ambulanceRequestRepository.assignAmbulance(requestId, ambulanceId);
+      setRequests((prev) => prev.map((r) => (r.id === requestId ? updatedRequest : r)));
+      const refreshedAmbulances = await ambulanceRepository.getAll();
+      setAmbulances(refreshedAmbulances);
+      toast({ title: 'Assigned', description: 'Ambulance assigned to request.' });
+    } catch (error: any) {
+      toast({
+        title: 'Assign failed',
+        description: error?.response?.data?.message || 'Could not assign ambulance.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCompleteRequest = async (requestId: string) => {
+    setIsProcessing(true);
+    try {
+      const updatedRequest = await ambulanceRequestRepository.updateStatus(requestId, 'completed');
+      setRequests((prev) => prev.map((r) => (r.id === requestId ? updatedRequest : r)));
+      const refreshedAmbulances = await ambulanceRepository.getAll();
+      setAmbulances(refreshedAmbulances);
+      toast({ title: 'Completed', description: 'Request marked as completed.' });
+    } catch (error: any) {
+      toast({
+        title: 'Update failed',
+        description: error?.response?.data?.message || 'Could not update request status.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const getStatusBadge = (status: Ambulance['status']) => {
@@ -242,7 +291,7 @@ const AdminAmbulances = () => {
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit">{editingAmbulance ? 'Update' : 'Add'} Ambulance</Button>
+                  <Button type="submit" disabled={isProcessing}>{editingAmbulance ? 'Update' : 'Add'} Ambulance</Button>
                 </div>
               </form>
             </DialogContent>
@@ -303,7 +352,7 @@ const AdminAmbulances = () => {
                               <Button variant="ghost" size="icon" onClick={() => handleEdit(ambulance)}>
                                 <Pencil className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" onClick={() => handleDelete(ambulance.id)}>
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(ambulance.id)} disabled={isProcessing}>
                                 <Trash2 className="w-4 h-4 text-destructive" />
                               </Button>
                             </div>
@@ -368,7 +417,7 @@ const AdminAmbulances = () => {
                             </Select>
                           )}
                           {(request.status === 'assigned' || request.status === 'en_route') && (
-                            <Button size="sm" onClick={() => handleCompleteRequest(request.id, request.ambulanceId)}>
+                            <Button size="sm" onClick={() => handleCompleteRequest(request.id)} disabled={isProcessing}>
                               <CheckCircle2 className="w-4 h-4 mr-2" />
                               Mark Complete
                             </Button>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,13 +30,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Calendar, Plus, Pencil, Trash2, Search, Clock, Bus, Route } from 'lucide-react';
-import { schedules as initialSchedules, buses, routes, drivers } from '@/data/dummyData';
-import { Schedule, UserRole } from '@/data/types';
+import { Bus as BusType, Driver, Route as RouteType, Schedule, UserRole } from '@/data/types';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { busRepository, driverRepository, routeRepository, scheduleRepository } from '@/services/repositories';
 
 const AdminSchedules = () => {
-  const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [buses, setBuses] = useState<BusType[]>([]);
+  const [routes, setRoutes] = useState<RouteType[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
@@ -49,6 +52,31 @@ const AdminSchedules = () => {
     category: [] as UserRole[],
   });
   const { toast } = useToast();
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [allSchedules, allBuses, allRoutes, allDrivers] = await Promise.all([
+          scheduleRepository.getAll(),
+          busRepository.getAll(),
+          routeRepository.getAll(),
+          driverRepository.getAll(),
+        ]);
+        setSchedules(allSchedules);
+        setBuses(allBuses);
+        setRoutes(allRoutes);
+        setDrivers(allDrivers);
+      } catch (error: any) {
+        toast({
+          title: 'Failed to load schedules',
+          description: error?.response?.data?.message || 'Could not fetch scheduling data from backend.',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    loadData();
+  }, [toast]);
 
   const formatTime = (time: string) => {
     const [hours, minutes] = time.split(':');
@@ -68,7 +96,7 @@ const AdminSchedules = () => {
     );
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.category.length === 0) {
@@ -76,20 +104,23 @@ const AdminSchedules = () => {
       return;
     }
     
-    if (editingSchedule) {
-      setSchedules(schedules.map(s => 
-        s.id === editingSchedule.id 
-          ? { ...s, ...formData }
-          : s
-      ));
-      toast({ title: 'Success', description: 'Schedule updated successfully.' });
-    } else {
-      const newSchedule: Schedule = {
-        id: `sch${Date.now()}`,
-        ...formData,
-      };
-      setSchedules([...schedules, newSchedule]);
-      toast({ title: 'Success', description: 'New schedule added successfully.' });
+    try {
+      if (editingSchedule) {
+        const updated = await scheduleRepository.update(editingSchedule.id, formData);
+        setSchedules((prev) => prev.map((s) => (s.id === editingSchedule.id ? updated : s)));
+        toast({ title: 'Success', description: 'Schedule updated successfully.' });
+      } else {
+        const created = await scheduleRepository.create(formData);
+        setSchedules((prev) => [...prev, created]);
+        toast({ title: 'Success', description: 'New schedule added successfully.' });
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Save failed',
+        description: error?.response?.data?.message || 'Could not save schedule.',
+        variant: 'destructive',
+      });
+      return;
     }
     
     setIsDialogOpen(false);
@@ -117,9 +148,18 @@ const AdminSchedules = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (scheduleId: string) => {
-    setSchedules(schedules.filter(s => s.id !== scheduleId));
-    toast({ title: 'Deleted', description: 'Schedule removed successfully.' });
+  const handleDelete = async (scheduleId: string) => {
+    try {
+      await scheduleRepository.delete(scheduleId);
+      setSchedules((prev) => prev.filter((s) => s.id !== scheduleId));
+      toast({ title: 'Deleted', description: 'Schedule removed successfully.' });
+    } catch (error: any) {
+      toast({
+        title: 'Delete failed',
+        description: error?.response?.data?.message || 'Could not delete schedule.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleOpenDialog = () => {

@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Bus, Clock, MapPin, Phone, User, AlertCircle } from 'lucide-react';
-import { schedules, buses, routes, drivers } from '@/data/dummyData';
+import { Bus as BusType, Driver, Route as RouteType, Schedule } from '@/data/types';
 import { cn } from '@/lib/utils';
+import { busRepository, driverRepository, routeRepository, scheduleRepository } from '@/services/repositories';
 
 const BusDetails = () => {
   const { scheduleId } = useParams();
@@ -17,6 +18,31 @@ const BusDetails = () => {
   const map = useRef<mapboxgl.Map | null>(null);
   const mapboxToken = 'pk.eyJ1Ijoic2Fyb3dhcmlzbGFtIiwiYSI6ImNtazJsMnV6bDA5cGQzZHM4c2lza3Rta3kifQ.qoRQGOz5UK3XTG5BaCXd2Q';
   const [mapError, setMapError] = useState(false);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [buses, setBuses] = useState<BusType[]>([]);
+  const [routes, setRoutes] = useState<RouteType[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [allSchedules, allBuses, allRoutes, allDrivers] = await Promise.all([
+          scheduleRepository.getAll(),
+          busRepository.getAll(),
+          routeRepository.getAll(),
+          driverRepository.getAll(),
+        ]);
+        setSchedules(allSchedules);
+        setBuses(allBuses);
+        setRoutes(allRoutes);
+        setDrivers(allDrivers);
+      } catch {
+        setMapError(true);
+      }
+    };
+
+    loadData();
+  }, []);
 
   const schedule = schedules.find(s => s.id === scheduleId);
   const bus = buses.find(b => b.id === schedule?.busId);

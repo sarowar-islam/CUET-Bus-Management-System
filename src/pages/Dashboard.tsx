@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import UserLayout from '@/components/layout/UserLayout';
@@ -6,28 +6,68 @@ import AdminLayout from '@/components/layout/AdminLayout';
 import StatCard from '@/components/dashboard/StatCard';
 import BusList from '@/components/dashboard/BusList';
 import { Bus, Route, Clock, Users, Ambulance, FileText, ArrowRight, ArrowLeft, Calendar, UserCheck } from 'lucide-react';
-import { getSchedulesForRole, buses, routes, schedules, drivers, ambulances, busRequests } from '@/data/dummyData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserRole } from '@/data/types';
+import { Bus as BusType, Driver, Route as RouteType, Schedule, ScheduleWithDetails } from '@/data/types';
+import { ambulanceRepository, busRepository, busRequestRepository, driverRepository, routeRepository, scheduleRepository } from '@/services/repositories';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const [activeSection, setActiveSection] = useState<'overview' | 'buses' | 'ambulance'>('overview');
+  const [buses, setBuses] = useState<BusType[]>([]);
+  const [routes, setRoutes] = useState<RouteType[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [ambulances, setAmbulances] = useState<any[]>([]);
+  const [busRequests, setBusRequests] = useState<any[]>([]);
   
   const isAdmin = user?.role === 'admin';
   const isTeacherOrStaff = user?.role === 'teacher' || user?.role === 'staff';
   const userRole = (user?.role === 'admin' ? 'student' : user?.role) as 'student' | 'teacher' | 'staff';
-  
-  const userSchedules = isAdmin 
-    ? schedules.map(s => {
-        const bus = buses.find(b => b.id === s.busId)!;
-        const route = routes.find(r => r.id === s.routeId)!;
-        const driver = { id: s.driverId, name: 'Driver', phone: '01700000000' };
-        return { ...s, bus, route, driver };
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [allBuses, allRoutes, allDrivers, allSchedules, allAmbulances, allBusRequests] = await Promise.all([
+          busRepository.getAll(),
+          routeRepository.getAll(),
+          driverRepository.getAll(),
+          scheduleRepository.getAll(),
+          ambulanceRepository.getAll(),
+          busRequestRepository.getAll(),
+        ]);
+        setBuses(allBuses);
+        setRoutes(allRoutes);
+        setDrivers(allDrivers);
+        setSchedules(allSchedules);
+        setAmbulances(allAmbulances);
+        setBusRequests(allBusRequests);
+      } catch {
+        // Keep dashboard usable even if one backend request fails.
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const schedulesWithDetails = useMemo<ScheduleWithDetails[]>(() => {
+    return schedules
+      .map((schedule) => {
+        const bus = buses.find((b) => b.id === schedule.busId);
+        const route = routes.find((r) => r.id === schedule.routeId);
+        const driver = drivers.find((d) => d.id === schedule.driverId);
+        if (!bus || !route || !driver) {
+          return null;
+        }
+        return { ...schedule, bus, route, driver };
       })
-    : getSchedulesForRole(userRole);
+      .filter((schedule): schedule is ScheduleWithDetails => schedule !== null);
+  }, [buses, drivers, routes, schedules]);
+
+  const userSchedules = isAdmin
+    ? schedulesWithDetails
+    : schedulesWithDetails.filter((schedule) => schedule.category.includes(userRole));
   
   const fromCuetSchedules = userSchedules.filter(s => s.direction === 'from_cuet');
   const toCuetSchedules = userSchedules.filter(s => s.direction === 'to_cuet');
