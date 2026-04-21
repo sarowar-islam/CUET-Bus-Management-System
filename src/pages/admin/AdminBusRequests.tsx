@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,8 +35,7 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { busRequests as initialRequests, buses, drivers } from '@/data/dummyData';
-import { BusRequest } from '@/data/types';
+import { Bus as BusType, BusRequest, Driver } from '@/data/types';
 import { 
   Bus, 
   Search, 
@@ -51,14 +50,18 @@ import {
   Eye,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { busRepository, busRequestRepository, driverRepository } from '@/services/repositories';
 
 const AdminBusRequests = () => {
   const { toast } = useToast();
   
-  const [requests, setRequests] = useState<BusRequest[]>(initialRequests);
+  const [requests, setRequests] = useState<BusRequest[]>([]);
+  const [buses, setBuses] = useState<BusType[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRequest, setSelectedRequest] = useState<BusRequest | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [assignData, setAssignData] = useState({
     busId: '',
     driverId: '',
@@ -75,49 +78,92 @@ const AdminBusRequests = () => {
   const approvedRequests = filteredRequests.filter(r => r.status === 'approved');
   const completedRequests = filteredRequests.filter(r => r.status === 'completed' || r.status === 'rejected');
 
-  const handleApprove = () => {
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [allRequests, allBuses, allDrivers] = await Promise.all([
+          busRequestRepository.getAll(),
+          busRepository.getAll(),
+          driverRepository.getAll(),
+        ]);
+        setRequests(allRequests);
+        setBuses(allBuses);
+        setDrivers(allDrivers);
+      } catch (error: any) {
+        toast({
+          title: 'Failed to load bus requests',
+          description: error?.response?.data?.message || 'Could not load request data from backend.',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    loadData();
+  }, [toast]);
+
+  const handleApprove = async () => {
     if (!selectedRequest || !assignData.busId || !assignData.driverId) {
       toast({ title: 'Error', description: 'Please assign a bus and driver.', variant: 'destructive' });
       return;
     }
 
-    setRequests(requests.map(r => 
-      r.id === selectedRequest.id 
-        ? { 
-            ...r, 
-            status: 'approved', 
-            assignedBusId: assignData.busId,
-            assignedDriverId: assignData.driverId,
-            adminNotes: assignData.adminNotes,
-            updatedAt: new Date(),
-          }
-        : r
-    ));
-    
-    setIsDetailOpen(false);
-    setSelectedRequest(null);
-    setAssignData({ busId: '', driverId: '', adminNotes: '' });
-    toast({ title: 'Approved', description: 'Bus request has been approved.' });
+    setIsProcessing(true);
+    try {
+      const approved = await busRequestRepository.approve(selectedRequest.id, assignData.busId, assignData.driverId);
+      const updated = assignData.adminNotes?.trim()
+        ? await busRequestRepository.updateStatus(approved.id, 'approved')
+        : approved;
+
+      setRequests((prev) => prev.map((r) => (r.id === selectedRequest.id ? { ...updated, adminNotes: assignData.adminNotes || updated.adminNotes } : r)));
+      setIsDetailOpen(false);
+      setSelectedRequest(null);
+      setAssignData({ busId: '', driverId: '', adminNotes: '' });
+      toast({ title: 'Approved', description: 'Bus request has been approved.' });
+    } catch (error: any) {
+      toast({
+        title: 'Approve failed',
+        description: error?.response?.data?.message || 'Could not approve this request.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handleReject = (requestId: string, notes: string) => {
-    setRequests(requests.map(r => 
-      r.id === requestId 
-        ? { ...r, status: 'rejected', adminNotes: notes || 'Request rejected by admin', updatedAt: new Date() }
-        : r
-    ));
-    setIsDetailOpen(false);
-    setSelectedRequest(null);
-    toast({ title: 'Rejected', description: 'Bus request has been rejected.' });
+  const handleReject = async (requestId: string, notes: string) => {
+    setIsProcessing(true);
+    try {
+      const rejected = await busRequestRepository.reject(requestId, notes || 'Request rejected by admin');
+      setRequests((prev) => prev.map((r) => (r.id === requestId ? rejected : r)));
+      setIsDetailOpen(false);
+      setSelectedRequest(null);
+      toast({ title: 'Rejected', description: 'Bus request has been rejected.' });
+    } catch (error: any) {
+      toast({
+        title: 'Reject failed',
+        description: error?.response?.data?.message || 'Could not reject this request.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handleComplete = (requestId: string) => {
-    setRequests(requests.map(r => 
-      r.id === requestId 
-        ? { ...r, status: 'completed', updatedAt: new Date() }
-        : r
-    ));
-    toast({ title: 'Completed', description: 'Trip marked as completed.' });
+  const handleComplete = async (requestId: string) => {
+    setIsProcessing(true);
+    try {
+      const completed = await busRequestRepository.updateStatus(requestId, 'completed');
+      setRequests((prev) => prev.map((r) => (r.id === requestId ? completed : r)));
+      toast({ title: 'Completed', description: 'Trip marked as completed.' });
+    } catch (error: any) {
+      toast({
+        title: 'Update failed',
+        description: error?.response?.data?.message || 'Could not update request status.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const openDetail = (request: BusRequest) => {
@@ -364,7 +410,7 @@ const AdminBusRequests = () => {
                                 <Button variant="ghost" size="sm" onClick={() => openDetail(request)}>
                                   <Eye className="w-4 h-4" />
                                 </Button>
-                                <Button size="sm" variant="outline" onClick={() => handleComplete(request.id)}>
+                                <Button size="sm" variant="outline" onClick={() => handleComplete(request.id)} disabled={isProcessing}>
                                   Mark Complete
                                 </Button>
                               </div>
@@ -487,11 +533,11 @@ const AdminBusRequests = () => {
                     </div>
 
                     <div className="flex justify-end gap-3 pt-2">
-                      <Button variant="destructive" onClick={() => handleReject(selectedRequest.id, assignData.adminNotes)}>
+                      <Button variant="destructive" onClick={() => handleReject(selectedRequest.id, assignData.adminNotes)} disabled={isProcessing}>
                         <XCircle className="w-4 h-4 mr-2" />
                         Reject
                       </Button>
-                      <Button onClick={handleApprove}>
+                      <Button onClick={handleApprove} disabled={isProcessing}>
                         <CheckCircle2 className="w-4 h-4 mr-2" />
                         Approve
                       </Button>

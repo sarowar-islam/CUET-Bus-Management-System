@@ -20,6 +20,8 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { authService } from '@/services/auth';
+import { userRepository } from '@/services/repositories';
 import { User, Moon, Sun, Trash2, Save } from 'lucide-react';
 
 const Settings: React.FC = () => {
@@ -30,43 +32,70 @@ const Settings: React.FC = () => {
   
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
-    
-    // Simulate saving (in real app, this would update the backend)
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Update localStorage
-    const storedUser = localStorage.getItem('cuet_bus_user');
-    if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      userData.fullName = fullName;
-      localStorage.setItem('cuet_bus_user', JSON.stringify(userData));
+
+    try {
+      const response = await authService.updateProfile({ fullName });
+      if (!response.success) {
+        toast({
+          title: 'Update failed',
+          description: response.error || 'Unable to update profile.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const profile = await authService.getProfile();
+      if (profile.success && profile.data) {
+        const storedUser = localStorage.getItem('cuet_bus_user');
+        if (storedUser) {
+          const current = JSON.parse(storedUser);
+          const updated = { ...current, ...(profile.data as any) };
+          localStorage.setItem('cuet_bus_user', JSON.stringify(updated));
+        }
+      }
+
+      toast({
+        title: 'Profile updated',
+        description: 'Your profile has been updated successfully.',
+      });
+    } finally {
+      setIsSaving(false);
     }
-    
-    setIsSaving(false);
-    toast({
-      title: "Profile updated",
-      description: "Your profile has been updated successfully.",
-    });
   };
 
-  const handleDeleteAccount = () => {
-    // Remove user from registered users
-    const registeredUsers = JSON.parse(localStorage.getItem('cuet_bus_registered_users') || '[]');
-    const updatedUsers = registeredUsers.filter((u: any) => u.id !== user?.id);
-    localStorage.setItem('cuet_bus_registered_users', JSON.stringify(updatedUsers));
-    
-    // Logout and redirect
-    logout();
-    navigate('/signin');
-    
-    toast({
-      title: "Account deleted",
-      description: "Your account has been permanently deleted.",
-      variant: "destructive",
-    });
+  const handleDeleteAccount = async () => {
+    if (!user?.id) {
+      toast({
+        title: 'Delete failed',
+        description: 'No authenticated user found.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await userRepository.delete(String(user.id));
+      logout();
+      navigate('/signin');
+      toast({
+        title: 'Account deleted',
+        description: 'Your account has been permanently deleted.',
+        variant: 'destructive',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Delete failed',
+        description: error?.response?.data?.message || 'Backend denied account deletion for this user.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -189,9 +218,10 @@ const Settings: React.FC = () => {
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction
                       onClick={handleDeleteAccount}
+                      disabled={isDeleting}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
-                      Delete Account
+                      {isDeleting ? 'Deleting...' : 'Delete Account'}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

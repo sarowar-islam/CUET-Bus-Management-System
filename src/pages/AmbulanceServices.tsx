@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import UserLayout from '@/components/layout/UserLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,20 +23,20 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { ambulances, ambulanceRequests as initialRequests } from '@/data/dummyData';
-import { AmbulanceRequest } from '@/data/types';
+import { Ambulance, AmbulanceRequest } from '@/data/types';
 import { Ambulance as AmbulanceIcon, Phone, MapPin, Clock, AlertTriangle, CheckCircle2, User, PhoneCall, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { ambulanceRepository, ambulanceRequestRepository } from '@/services/repositories';
 
 const AmbulanceServices = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const [requests, setRequests] = useState<AmbulanceRequest[]>(
-    initialRequests.filter(r => r.requesterId === user?.id)
-  );
+  const [ambulances, setAmbulances] = useState<Ambulance[]>([]);
+  const [requests, setRequests] = useState<AmbulanceRequest[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     pickupLocation: '',
     emergencyType: 'medical' as 'medical' | 'accident' | 'other',
@@ -46,8 +46,34 @@ const AmbulanceServices = () => {
 
   const availableAmbulances = ambulances.filter(a => a.status === 'available');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [allAmbulances, userRequests] = await Promise.all([
+          ambulanceRepository.getAll(),
+          user?.id ? ambulanceRequestRepository.getByRequesterId(String(user.id)) : Promise.resolve([]),
+        ]);
+        setAmbulances(allAmbulances);
+        setRequests(userRequests);
+      } catch (error: any) {
+        toast({
+          title: 'Failed to load ambulance data',
+          description: error?.response?.data?.message || 'Could not load ambulance service data.',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    loadData();
+  }, [user?.id, toast]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!user?.id) {
+      toast({ title: 'Authentication required', description: 'Please sign in again.', variant: 'destructive' });
+      return;
+    }
     
     if (availableAmbulances.length === 0) {
       toast({
@@ -58,37 +84,37 @@ const AmbulanceServices = () => {
       return;
     }
 
-    const newRequest: AmbulanceRequest = {
-      id: `areq${Date.now()}`,
-      requesterId: user?.id || '',
-      requesterName: user?.fullName || '',
-      requesterPhone: formData.phone,
-      requesterRole: user?.role || 'student',
-      pickupLocation: formData.pickupLocation,
-      emergencyType: formData.emergencyType,
-      description: formData.description,
-      status: 'pending',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    setIsSubmitting(true);
 
-    setRequests([newRequest, ...requests]);
-    setIsDialogOpen(false);
-    setFormData({ pickupLocation: '', emergencyType: 'medical', description: '', phone: '' });
-    
-    toast({
-      title: 'Emergency Request Sent!',
-      description: 'An ambulance has been dispatched to your location. Please stay calm.',
-    });
+    try {
+      const created = await ambulanceRequestRepository.create({
+        requesterId: String(user.id),
+        requesterName: user.fullName || '',
+        requesterPhone: formData.phone,
+        requesterRole: user.role,
+        pickupLocation: formData.pickupLocation,
+        emergencyType: formData.emergencyType,
+        description: formData.description,
+        status: 'pending',
+      });
 
-    // Simulate ambulance assignment after 2 seconds
-    setTimeout(() => {
-      setRequests(prev => prev.map(r => 
-        r.id === newRequest.id 
-          ? { ...r, status: 'assigned', ambulanceId: availableAmbulances[0]?.id, updatedAt: new Date() }
-          : r
-      ));
-    }, 2000);
+      setRequests((prev) => [created, ...prev]);
+      setIsDialogOpen(false);
+      setFormData({ pickupLocation: '', emergencyType: 'medical', description: '', phone: '' });
+
+      toast({
+        title: 'Emergency Request Sent!',
+        description: 'Your request has been sent to dispatch immediately.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Failed to send request',
+        description: error?.response?.data?.message || 'Could not submit ambulance request.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getStatusBadge = (status: AmbulanceRequest['status']) => {
@@ -251,7 +277,7 @@ const AmbulanceServices = () => {
                         <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                           Cancel
                         </Button>
-                        <Button type="submit" className="bg-red-600 hover:bg-red-700">
+                        <Button type="submit" className="bg-red-600 hover:bg-red-700" disabled={isSubmitting}>
                           Send Emergency Request
                         </Button>
                       </div>

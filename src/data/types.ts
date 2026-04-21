@@ -6,7 +6,7 @@ export interface User {
   email: string;
   fullName: string;
   role: UserRole;
-  password: string;
+  isVerified: boolean;
 }
 
 export interface Stop {

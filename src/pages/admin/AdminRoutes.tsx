@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,12 +22,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Route, Plus, Pencil, Trash2, Search, MapPin } from 'lucide-react';
-import { routes as initialRoutes, stops } from '@/data/dummyData';
-import { Route as RouteType } from '@/data/types';
+import { Route as RouteType, Stop } from '@/data/types';
 import { useToast } from '@/hooks/use-toast';
+import { routeRepository, stopRepository } from '@/services/repositories';
 
 const AdminRoutes = () => {
-  const [routes, setRoutes] = useState<RouteType[]>(initialRoutes);
+  const [routes, setRoutes] = useState<RouteType[]>([]);
+  const [stops, setStops] = useState<Stop[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRoute, setEditingRoute] = useState<RouteType | null>(null);
@@ -38,33 +39,63 @@ const AdminRoutes = () => {
   });
   const { toast } = useToast();
 
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [allRoutes, allStops] = await Promise.all([
+          routeRepository.getAll(),
+          stopRepository.getAll(),
+        ]);
+        setRoutes(allRoutes);
+        setStops(allStops);
+      } catch (error: any) {
+        toast({
+          title: 'Failed to load routes',
+          description: error?.response?.data?.message || 'Could not fetch route data from backend.',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    loadData();
+  }, [toast]);
+
   const filteredRoutes = routes.filter(route =>
     route.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const selectedStopObjects = formData.selectedStops.map(
       stopId => stops.find(s => s.id === stopId)!
     );
     
-    if (editingRoute) {
-      setRoutes(routes.map(r => 
-        r.id === editingRoute.id 
-          ? { ...r, name: formData.name, color: formData.color, stops: selectedStopObjects }
-          : r
-      ));
-      toast({ title: 'Success', description: 'Route updated successfully.' });
-    } else {
-      const newRoute: RouteType = {
-        id: `r${Date.now()}`,
-        name: formData.name,
-        color: formData.color,
-        stops: selectedStopObjects,
-      };
-      setRoutes([...routes, newRoute]);
-      toast({ title: 'Success', description: 'New route added successfully.' });
+    try {
+      if (editingRoute) {
+        const updated = await routeRepository.update(editingRoute.id, {
+          name: formData.name,
+          color: formData.color,
+          stops: selectedStopObjects,
+        });
+        setRoutes((prev) => prev.map((r) => (r.id === editingRoute.id ? updated : r)));
+        toast({ title: 'Success', description: 'Route updated successfully.' });
+      } else {
+        const created = await routeRepository.create({
+          name: formData.name,
+          color: formData.color,
+          stops: selectedStopObjects,
+        });
+        setRoutes((prev) => [...prev, created]);
+        toast({ title: 'Success', description: 'New route added successfully.' });
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Save failed',
+        description: error?.response?.data?.message || 'Could not save route.',
+        variant: 'destructive',
+      });
+      return;
     }
     
     setIsDialogOpen(false);
@@ -82,9 +113,18 @@ const AdminRoutes = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (routeId: string) => {
-    setRoutes(routes.filter(r => r.id !== routeId));
-    toast({ title: 'Deleted', description: 'Route removed successfully.' });
+  const handleDelete = async (routeId: string) => {
+    try {
+      await routeRepository.delete(routeId);
+      setRoutes((prev) => prev.filter((r) => r.id !== routeId));
+      toast({ title: 'Deleted', description: 'Route removed successfully.' });
+    } catch (error: any) {
+      toast({
+        title: 'Delete failed',
+        description: error?.response?.data?.message || 'Could not delete route.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleOpenDialog = () => {
