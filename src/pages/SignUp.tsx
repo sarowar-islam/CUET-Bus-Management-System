@@ -67,7 +67,12 @@ const SignUp = () => {
     const result = await signup({ fullName, username, email, password, role: selectedRole || undefined });
     
     if (result.success) {
-      navigate('/signin', { state: { message: 'Account created successfully! Please sign in.' } });
+      navigate('/verify-email', {
+        state: {
+          identifier: result.verificationIdentifier || email,
+          message: 'Account created successfully. Please verify your email using the code sent to your inbox.',
+        },
+      });
     } else {
       setError(result.error || 'Signup failed');
     }

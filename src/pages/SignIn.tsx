@@ -25,6 +25,13 @@ const SignIn = () => {
     
     if (result.success) {
       navigate('/dashboard');
+    } else if (result.requiresVerification) {
+      navigate('/verify-email', {
+        state: {
+          identifier: result.verificationIdentifier || username,
+          message: result.error || 'Please verify your email before signing in.',
+        },
+      });
     } else {
       setError(result.error || 'Login failed');
     }

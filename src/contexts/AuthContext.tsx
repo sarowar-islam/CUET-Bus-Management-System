@@ -2,11 +2,21 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User, UserRole } from '@/data/types';
 import { authService } from '@/services/auth';
 
+interface AuthActionResult {
+  success: boolean;
+  error?: string;
+  requiresVerification?: boolean;
+  verificationIdentifier?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signup: (data: SignupData) => Promise<{ success: boolean; error?: string }>;
+  login: (username: string, password: string) => Promise<AuthActionResult>;
+  signup: (data: SignupData) => Promise<AuthActionResult>;
+  verifyEmail: (identifier: string, code: string) => Promise<AuthActionResult>;
+  resendVerificationCode: (identifier: string) => Promise<{ success: boolean; error?: string }>;
+  getVerificationStatus: (identifier: string) => Promise<{ success: boolean; isVerified?: boolean; username?: string; email?: string; error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -41,17 +51,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Check for stored user on mount
     const storedUser = localStorage.getItem('cuet_bus_user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      const parsed = JSON.parse(storedUser) as User;
+      if (parsed.isVerified) {
+        setUser(parsed);
+      } else {
+        authService.logout();
+      }
     }
     setIsLoading(false);
   }, []);
 
-  const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const login = async (username: string, password: string): Promise<AuthActionResult> => {
     try {
       const response = await authService.login({ username, password });
       
       if (response.success && response.data) {
-        const { user, token } = response.data;
+        const { user, token, requiresVerification, verificationIdentifier } = response.data;
+
+        if (requiresVerification || !user?.isVerified || !token) {
+          return {
+            success: false,
+            requiresVerification: true,
+            verificationIdentifier: verificationIdentifier || user?.email || username,
+            error: 'Email not verified. Please verify your email first.',
+          };
+        }
+
         setUser(user);
         localStorage.setItem('cuet_bus_user', JSON.stringify(user));
         localStorage.setItem('cuet_bus_token', token);
@@ -64,7 +89,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const signup = async (data: SignupData): Promise<{ success: boolean; error?: string }> => {
+  const signup = async (data: SignupData): Promise<AuthActionResult> => {
     try {
       const response = await authService.signup({
         fullName: data.fullName,
@@ -75,12 +100,60 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       
       if (response.success) {
-        return { success: true };
+        return {
+          success: true,
+          requiresVerification: true,
+          verificationIdentifier: response.data?.verificationIdentifier || data.email,
+        };
       }
       
       return { success: false, error: response.error || 'Signup failed' };
     } catch (error: any) {
       return { success: false, error: 'An error occurred during signup' };
+    }
+  };
+
+  const verifyEmail = async (identifier: string, code: string): Promise<AuthActionResult> => {
+    try {
+      const response = await authService.verifyEmail(identifier, code);
+      if (response.success && response.data?.user && response.data?.token) {
+        setUser(response.data.user);
+        localStorage.setItem('cuet_bus_user', JSON.stringify(response.data.user));
+        localStorage.setItem('cuet_bus_token', response.data.token);
+        return { success: true };
+      }
+      return { success: false, error: response.error || 'Verification failed' };
+    } catch (error: any) {
+      return { success: false, error: 'An error occurred during verification' };
+    }
+  };
+
+  const resendVerificationCode = async (identifier: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await authService.resendVerificationCode(identifier);
+      if (response.success) {
+        return { success: true };
+      }
+      return { success: false, error: response.error || 'Unable to resend verification code' };
+    } catch (error: any) {
+      return { success: false, error: 'An error occurred while resending code' };
+    }
+  };
+
+  const getVerificationStatus = async (identifier: string) => {
+    try {
+      const response = await authService.getVerificationStatus(identifier);
+      if (response.success && response.data) {
+        return {
+          success: true,
+          isVerified: response.data.isVerified,
+          username: response.data.username,
+          email: response.data.email,
+        };
+      }
+      return { success: false, error: response.error || 'Unable to fetch verification status' };
+    } catch (error: any) {
+      return { success: false, error: 'An error occurred while checking status' };
     }
   };
 
@@ -95,6 +168,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       isLoading,
       login,
       signup,
+      verifyEmail,
+      resendVerificationCode,
+      getVerificationStatus,
       logout,
       isAuthenticated: !!user,
     }}>

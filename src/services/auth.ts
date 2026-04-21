@@ -18,8 +18,21 @@ export interface AuthResponse {
   success: boolean;
   message: string;
   data?: {
-    user: User;
-    token: string;
+    user: User | null;
+    token: string | null;
+    requiresVerification: boolean;
+    verificationIdentifier?: string | null;
+  };
+  error?: string;
+}
+
+export interface VerificationStatusResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    username: string;
+    email: string;
+    isVerified: boolean;
   };
   error?: string;
 }
@@ -51,6 +64,45 @@ export const authService = {
         success: false,
         message: 'Signup failed',
         error: error.response?.data?.message || error.message || 'Unable to create account',
+      };
+    }
+  },
+
+  getVerificationStatus: async (identifier: string): Promise<VerificationStatusResponse> => {
+    try {
+      const response = await api.post('/api/auth/verification-status', { identifier });
+      return response.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        message: 'Failed to fetch verification status',
+        error: error.response?.data?.message || error.response?.data?.error || 'Unable to check verification status',
+      };
+    }
+  },
+
+  verifyEmail: async (identifier: string, code: string): Promise<AuthResponse> => {
+    try {
+      const response = await api.post('/api/auth/verify-email', { identifier, code });
+      return response.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        message: 'Email verification failed',
+        error: error.response?.data?.message || error.response?.data?.error || 'Unable to verify email',
+      };
+    }
+  },
+
+  resendVerificationCode: async (identifier: string): Promise<{ success: boolean; message: string; error?: string }> => {
+    try {
+      const response = await api.post('/api/auth/resend-verification-code', { identifier });
+      return response.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        message: 'Resend failed',
+        error: error.response?.data?.message || error.response?.data?.error || 'Unable to resend verification code',
       };
     }
   },
