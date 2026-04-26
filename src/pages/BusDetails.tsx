@@ -6,7 +6,7 @@ import UserLayout from '@/components/layout/UserLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Bus, Clock, MapPin, Phone, User, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Bus, Clock, MapPin, Phone, User, AlertCircle, Loader2 } from 'lucide-react';
 import { Bus as BusType, Driver, Route as RouteType, Schedule } from '@/data/types';
 import { cn } from '@/lib/utils';
 import { busRepository, driverRepository, routeRepository, scheduleRepository } from '@/services/repositories';
@@ -18,6 +18,8 @@ const BusDetails = () => {
   const map = useRef<mapboxgl.Map | null>(null);
   const mapboxToken = 'pk.eyJ1Ijoic2Fyb3dhcmlzbGFtIiwiYSI6ImNtazJsMnV6bDA5cGQzZHM4c2lza3Rta3kifQ.qoRQGOz5UK3XTG5BaCXd2Q';
   const [mapError, setMapError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [buses, setBuses] = useState<BusType[]>([]);
   const [routes, setRoutes] = useState<RouteType[]>([]);
@@ -25,6 +27,8 @@ const BusDetails = () => {
 
   useEffect(() => {
     const loadData = async () => {
+      setIsLoading(true);
+      setLoadError(false);
       try {
         const [allSchedules, allBuses, allRoutes, allDrivers] = await Promise.all([
           scheduleRepository.getAll(),
@@ -37,7 +41,9 @@ const BusDetails = () => {
         setRoutes(allRoutes);
         setDrivers(allDrivers);
       } catch {
-        setMapError(true);
+        setLoadError(true);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -161,6 +167,34 @@ const BusDetails = () => {
       map.current?.remove();
     };
   }, [route, mapboxToken]);
+
+  if (isLoading) {
+    return (
+      <UserLayout>
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="w-12 h-12 text-primary mb-4 animate-spin" />
+          <h2 className="text-xl font-bold text-foreground mb-2">Loading Schedule</h2>
+          <p className="text-muted-foreground">Please wait while we load bus details.</p>
+        </div>
+      </UserLayout>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <UserLayout>
+        <div className="flex flex-col items-center justify-center py-20">
+          <AlertCircle className="w-12 h-12 text-destructive mb-4" />
+          <h2 className="text-xl font-bold text-foreground mb-2">Unable to Load Schedule</h2>
+          <p className="text-muted-foreground mb-4">We could not fetch bus data right now. Please try again.</p>
+          <Button onClick={() => navigate('/dashboard')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        </div>
+      </UserLayout>
+    );
+  }
 
   if (!schedule || !bus || !route || !driver) {
     return (
